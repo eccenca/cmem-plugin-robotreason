@@ -1,0 +1,215 @@
+@prefix : <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> .
+@prefix vocab: <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> .
+
+<https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> rdf:type owl:Ontology ;
+                                                  owl:imports vocab: ;
+                                                  rdfs:comment "Example data for a reasoning use case"@en ;
+                                                  rdfs:label "Eccenca Reasoning Data"@en ;
+                                                  rdfs:seeAlso <http://owl.man.ac.uk/2006/07/sssw/people> .
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Daily_Mirror
+:Daily_Mirror rdf:type owl:NamedIndividual ,
+                       owl:Thing ;
+              rdfs:comment "The paper read by Mick."^^xsd:string ;
+              rdfs:label "Daily Mirror"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Dewey
+:Dewey rdf:type owl:NamedIndividual ,
+                vocab:duck ;
+       rdfs:comment ""^^xsd:string ;
+       rdfs:label "Dewey"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Fido
+:Fido rdf:type owl:NamedIndividual ,
+               vocab:dog ;
+      rdfs:comment ""^^xsd:string ;
+      rdfs:label "Fido"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Flossie
+:Flossie rdf:type owl:NamedIndividual ,
+                  vocab:cow ;
+         rdfs:comment ""^^xsd:string ;
+         rdfs:label "Flossie"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Fluffy
+:Fluffy rdf:type owl:NamedIndividual ,
+                 vocab:tiger ;
+        rdfs:comment ""^^xsd:string ;
+        rdfs:label "Fluffy"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Fred
+:Fred rdf:type owl:NamedIndividual ,
+               vocab:person ;
+      vocab:has_pet :Tibbs ;
+      rdfs:comment ""^^xsd:string ;
+      rdfs:label "Fred"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Huey
+:Huey rdf:type owl:NamedIndividual ,
+               vocab:duck ;
+      rdfs:comment ""^^xsd:string ;
+      rdfs:label "Huey"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Joe
+:Joe rdf:type owl:NamedIndividual ,
+              vocab:person ;
+     vocab:has_pet :Fido ;
+     rdfs:comment ""^^xsd:string ;
+     rdfs:label "Joe"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Kevin
+:Kevin rdf:type owl:NamedIndividual ,
+                vocab:person ;
+       vocab:has_pet :Flossie ,
+                :Fluffy ;
+       rdfs:comment ""^^xsd:string ;
+       rdfs:label "Kevin"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Louie
+:Louie rdf:type owl:NamedIndividual ,
+                vocab:duck ;
+       rdfs:comment ""^^xsd:string ;
+       rdfs:label "Louie"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Mick
+:Mick rdf:type owl:NamedIndividual ,
+               vocab:male ;
+      vocab:drives :Q123_ABC ;
+      vocab:reads :Daily_Mirror ;
+      rdfs:comment "Mick is male and drives a white van. "^^xsd:string ;
+      rdfs:label "Mick"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Minnie
+:Minnie rdf:type owl:NamedIndividual ,
+                 vocab:elderly ,
+                 vocab:female ;
+        vocab:has_pet :Tom ;
+        rdfs:comment ""^^xsd:string ;
+        rdfs:label "Minnie"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Pete
+:Pete rdf:type owl:NamedIndividual ,
+               owl:Thing ;
+      rdfs:comment ""^^xsd:string ;
+      rdfs:label "Pete"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Q123_ABC
+:Q123_ABC rdf:type owl:NamedIndividual ,
+                   vocab:van ,
+                   vocab:white_thing ;
+          rdfs:comment "A white van"^^xsd:string ;
+          rdfs:label "Q123 ABC"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Rex
+:Rex rdf:type owl:NamedIndividual ,
+              vocab:dog ;
+     vocab:is_pet_of :Mick ;
+     rdfs:comment ""^^xsd:string ;
+     rdfs:label "Rex"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Spike
+:Spike rdf:type owl:NamedIndividual ,
+                owl:Thing ;
+       vocab:is_pet_of :Pete ;
+       rdfs:comment ""^^xsd:string ;
+       rdfs:label "Spike"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/The_Guardian
+:The_Guardian rdf:type owl:NamedIndividual ,
+                       vocab:broadsheet ;
+              rdfs:comment ""^^xsd:string ;
+              rdfs:label "The Guardian"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/The_Sun
+:The_Sun rdf:type owl:NamedIndividual ,
+                  vocab:tabloid ;
+         rdfs:comment ""^^xsd:string ;
+         rdfs:label "The Sun"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/The_Times
+:The_Times rdf:type owl:NamedIndividual ,
+                    vocab:broadsheet ;
+           rdfs:comment ""^^xsd:string ;
+           rdfs:label "The Times"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Tibbs
+:Tibbs rdf:type owl:NamedIndividual ,
+                vocab:cat ;
+       rdfs:comment ""^^xsd:string ;
+       rdfs:label "Tibbs"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Tom
+:Tom rdf:type owl:NamedIndividual ,
+              owl:Thing ;
+     rdfs:comment ""^^xsd:string ;
+     rdfs:label "Tom"^^xsd:string .
+
+
+###  https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/Walt
+:Walt rdf:type owl:NamedIndividual ,
+               vocab:person ;
+      vocab:has_pet :Dewey ,
+               :Huey ,
+               :Louie ;
+      rdfs:comment ""^^xsd:string ;
+      rdfs:label "Walt"^^xsd:string .
+
+
+#################################################################
+#    General axioms
+#################################################################
+
+[ rdf:type owl:AllDifferent ;
+  owl:distinctMembers ( :Dewey
+                        :Fido
+                        :Flossie
+                        :Fluffy
+                        :Fred
+                        :Huey
+                        :Joe
+                        :Kevin
+                        :Louie
+                        :Mick
+                        :Minnie
+                        :Q123_ABC
+                        :Rex
+                        :The_Guardian
+                        :The_Sun
+                        :The_Times
+                        :Tibbs
+                        :Walt
+                      )
+] .
+
+
+###  Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi

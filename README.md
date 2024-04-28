@@ -69,8 +69,3 @@ Reasoner_ and _Whelk_.
 
 
 [![eccenca Corporate Memory](https://img.shields.io/badge/eccenca-Corporate%20Memory-orange)](https://documentation.eccenca.com)   
-
-to
-```
-- task custom:build
-```

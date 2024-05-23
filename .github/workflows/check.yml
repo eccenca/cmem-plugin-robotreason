@@ -55,7 +55,7 @@ jobs:
           CMEM_BASE_URI: ${{ secrets.CMEM_BASE_URI }}
           OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
         run: |
-          task custom:download_robot check:pytest
+          task check:pytest
 
       - name: safety
         run: |

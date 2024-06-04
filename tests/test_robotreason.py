@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from cmem.cmempy.dp.proxy.graph import delete, get, post
 from rdflib import DCTERMS, OWL, RDF, RDFS, Graph, URIRef
+from rdflib.compare import to_isomorphic
 
 from cmem_plugin_robotreason.workflow import RobotReasonPlugin
 from tests.utils import TestExecutionContext, needs_cmem
@@ -36,7 +37,7 @@ def _setup(request: pytest.FixtureRequest) -> None:
 def tests(_setup: None) -> None:
     """Tests"""
 
-    def test_reasoner(reasoner: str) -> None:
+    def test_reasoner(reasoner: str, err_list: list) -> list:
         RobotReasonPlugin(
             data_graph_iri=DATA_GRAPH_IRI,
             ontology_graph_iri=ONTOLOGY_GRAPH_IRI,
@@ -53,12 +54,14 @@ def tests(_setup: None) -> None:
         result.remove((None, RDF.type, OWL.AnnotationProperty))
 
         test = Graph().parse(Path(__path__[0]) / f"test_{reasoner}.ttl", format="turtle")
-        for triple in result:
-            assert triple in test
+        if to_isomorphic(result) != to_isomorphic(test):
+            err_list.append(reasoner)
+        return err_list
 
-        for triple in test:
-            assert triple in result
-
+    errors: list[str] = []
     reasoners = ["elk", "hermit", "jfact", "structural", "whelk"]
     for reasoner in reasoners:
-        test_reasoner(reasoner)
+        errors = test_reasoner(reasoner, errors)
+
+    if errors:
+        raise AssertionError(f"Test failed for resoners: {', '.join(errors)}")

@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier
+_commit: v6.1.0
+_src_path: gh:eccenca/cmem-plugin-template
+author_mail: info@eccenca.com
+author_name: eccenca GmbH
+github_page: ''
+project_description: Reasoning with Robot
+project_slug: robotreason
+pypi: false
+

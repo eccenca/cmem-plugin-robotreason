@@ -64,4 +64,4 @@ def tests(_setup: None) -> None:
         errors = test_reasoner(reasoner, errors)
 
     if errors:
-        raise AssertionError(f"Test failed for resoners: {', '.join(errors)}")
+        raise AssertionError(f"Test failed for reasoners: {', '.join(errors)}")

@@ -19,14 +19,6 @@ already exists in the same version. The ROBOT files are downloaded to the direct
 _cmem_plugin_robotreason/workflow/bin_ and are not removed automatically when running `task clean`. The files can be
 removed with `task custom:clean_robot`.
 
-
-
-```
-➜ task clean build
-```
-
-If the files already exist locally, and you want to skip the download entirely, use:
-
 ```
 ➜ task clean build
 ```

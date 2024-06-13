@@ -55,8 +55,13 @@ The IRI of the output graph for the reasoning result.
 
 ### Reasoner
 
-The following reasoner options are supported: _ELK_, _Expression Materializing Reasoner_, _HermiT_, _JFact_, _Structural
-Reasoner_ and _Whelk_.
+The following reasoner options are supported: 
+- _ELK_
+- [Expression Materializing Reasoner](http://static.javadoc.io/org.geneontology/expression-materializing-reasoner/0.1.3/org/geneontology/reasoner/ExpressionMaterializingReasoner.html)
+- [HermiT](http://www.hermit-reasoner.com/)
+- [JFact](http://jfact.sourceforge.net/)
+- [Structural Reasoner](http://owlcs.github.io/owlapi/apidocs_4/org/semanticweb/owlapi/reasoner/structural/StructuralReasoner.html)
+- [Whelk](https://github.com/balhoff/whelk)
 
 
 

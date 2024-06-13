@@ -176,6 +176,7 @@ tasks:
     <<: *preparation
     deps:
       - clean
+      - custom:download_robot
       - poetry:check
     cmds:
       - poetry build

@@ -22,7 +22,7 @@ removed with `task custom:clean_robot`.
 
 
 ```
-➜ task clean custom:build
+➜ task clean build
 ```
 
 If the files already exist locally, and you want to skip the download entirely, use:

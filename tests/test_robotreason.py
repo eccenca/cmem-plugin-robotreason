@@ -59,7 +59,7 @@ def tests(_setup: None) -> None:
         return err_list
 
     errors: list[str] = []
-    reasoners = ["elk", "hermit", "jfact", "structural", "whelk"]
+    reasoners = ["elk", "emr", "hermit", "jfact", "structural", "whelk"]
     for reasoner in reasoners:
         errors = test_reasoner(reasoner, errors)
 

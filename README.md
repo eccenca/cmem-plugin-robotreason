@@ -9,7 +9,7 @@ an OBO Tool). It takes an OWL ontology and a data  graph as inputs and writes th
 
 :warning: Before building, verify that **pyproject.toml** includes the following line in the `[tool.poetry]` section:
 ```
-include = ["cmem_plugin_robotreason/workflow/bin/*"]
+include = ["cmem_plugin_robotreason/bin/*"]
 ```
 
 

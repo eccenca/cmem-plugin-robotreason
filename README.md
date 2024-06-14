@@ -56,12 +56,12 @@ The IRI of the output graph for the reasoning result.
 ### Reasoner
 
 The following reasoner options are supported: 
-- elk ([ELK](https://code.google.com/p/elk-reasoner/))
-- emr ([Expression Materializing Reasoner](http://static.javadoc.io/org.geneontology/expression-materializing-reasoner/0.1.3/org/geneontology/reasoner/ExpressionMaterializingReasoner.html))
-- hermit ([HermiT](http://www.hermit-reasoner.com/))
-- jfact ([JFact](http://jfact.sourceforge.net/))
-- structural ([Structural Reasoner](http://owlcs.github.io/owlapi/apidocs_4/org/semanticweb/owlapi/reasoner/structural/StructuralReasoner.html))
-- whelk ([Whelk](https://github.com/balhoff/whelk))
+- [ELK](https://code.google.com/p/elk-reasoner/) (elk)
+- [Expression Materializing Reasoner](http://static.javadoc.io/org.geneontology/expression-materializing-reasoner/0.1.3/org/geneontology/reasoner/ExpressionMaterializingReasoner.html) (emr)
+- [HermiT](http://www.hermit-reasoner.com/) (hermit)
+- [JFact](http://jfact.sourceforge.net/) (jfact)
+- [Structural Reasoner](http://owlcs.github.io/owlapi/apidocs_4/org/semanticweb/owlapi/reasoner/structural/StructuralReasoner.html) (structural)
+- [Whelk](https://github.com/balhoff/whelk) (whelk)
 
 
 

@@ -149,4 +149,4 @@ artifacts
 .task
 
 # ROBOT
-cmem_plugin_robotreason/workflow/bin/
+cmem_plugin_robotreason/bin/

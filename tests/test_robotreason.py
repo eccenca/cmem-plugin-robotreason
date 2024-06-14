@@ -7,7 +7,7 @@ from cmem.cmempy.dp.proxy.graph import delete, get, post
 from rdflib import DCTERMS, OWL, RDF, RDFS, Graph, URIRef
 from rdflib.compare import to_isomorphic
 
-from cmem_plugin_robotreason.workflow import RobotReasonPlugin
+from cmem_plugin_robotreason import RobotReasonPlugin
 from tests.utils import TestExecutionContext, needs_cmem
 
 from . import __path__

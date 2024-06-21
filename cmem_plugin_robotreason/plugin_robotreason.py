@@ -108,8 +108,6 @@ class RobotReasonPlugin(WorkflowPlugin):
         self.result_iri = result_iri
         self.reasoner = reasoner
         self.temp = f"robot_{uuid4().hex}"
-        if not Path(self.temp).exists():
-            Path(self.temp).mkdir(parents=True)
 
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
@@ -129,6 +127,8 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def get_graphs(self, graphs: dict) -> None:
         """Get graphs from CMEM"""
+        if not Path(self.temp).exists():
+            Path(self.temp).mkdir(parents=True)
         for graph in graphs:
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 file.write(get(graph).text)

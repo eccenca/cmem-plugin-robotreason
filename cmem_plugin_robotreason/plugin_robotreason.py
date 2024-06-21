@@ -7,7 +7,7 @@ from collections import OrderedDict
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import run  # nosec
+from subprocess import run
 from time import time
 from uuid import uuid4
 from xml.etree.ElementTree import (
@@ -122,7 +122,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             uri.set("id", "Auto-generated import resolution by cmem-plugin-robotreason")
             uri.set("name", graph)
             uri.set("uri", graphs[graph])
-        reparsed = minidom.parseString(tostring(catalog, "utf-8")).toxml()  # nosec
+        reparsed = minidom.parseString(tostring(catalog, "utf-8")).toxml()
         with Path(file_name).open("w", encoding="utf-8") as file:
             file.truncate(0)
             file.write(reparsed)

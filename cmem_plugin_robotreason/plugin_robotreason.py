@@ -117,9 +117,9 @@ class RobotReasonPlugin(WorkflowPlugin):
         catalog = Element("catalog")
         catalog.set("prefer", "public")
         catalog.set("xmlns", "urn:oasis:names:tc:entity:xmlns:xml:catalog")
-        for graph in graphs:
+        for i, graph in enumerate(graphs):
             uri = SubElement(catalog, "uri")
-            uri.set("id", "Auto-generated import resolution by cmem-plugin-robotreason")
+            uri.set("id", f"id{i}")
             uri.set("name", graph)
             uri.set("uri", graphs[graph])
         reparsed = minidom.parseString(tostring(catalog, "utf-8")).toxml()
@@ -132,11 +132,11 @@ class RobotReasonPlugin(WorkflowPlugin):
         for graph in graphs:
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 file.write(get(graph).text)
-                file.write(
-                    f"<{graph}> "
-                    f"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
-                    f"<http://www.w3.org/2002/07/owl#Ontology> .\n"
-                )
+                if graph == self.data_graph_iri:
+                    file.write(
+                        f"\n<{graph}> "
+                        f"<http://www.w3.org/2002/07/owl#imports> <{self.ontology_graph_iri}> ."
+                    )
 
     def get_graphs_tree(self) -> dict:
         """Get graph import tree"""
@@ -153,9 +153,7 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
-        inputs = ""
-        for value in graphs.values():
-            inputs += f' --input "{self.temp}/{value}"'
+        inputs = f' --input "{self.temp}/{graphs[self.data_graph_iri]}"'
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
             f"{ROBOT} merge{inputs} --collapse-import-closure false "

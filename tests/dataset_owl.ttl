@@ -7,8 +7,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @base <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> .
 
-<https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> rdf:type owl:Ontology ;
-                                                  owl:imports vocab: ;
+<https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/>
                                                   rdfs:comment "Example data for a reasoning use case"@en ;
                                                   rdfs:label "Eccenca Reasoning Data"@en ;
                                                   rdfs:seeAlso <http://owl.man.ac.uk/2006/07/sssw/people> .

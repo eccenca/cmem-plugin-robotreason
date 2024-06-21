@@ -13,7 +13,7 @@ include = ["cmem_plugin_robotreason/bin/*"]
 ```
 
 
-:bulb: Prior to the build process, the Java library _robot.jar_ (v1.9.4) and the _robot.sh_ script are automatically
+:bulb: Prior to the build process, the Java library _robot.jar_ (v1.9.6) and the _robot.sh_ script are automatically
 downloaded from the [ROBOT GitHub repository](https://github.com/ontodev/robot). The _jar_ file is not downloaded if it
 already exists in the same version. The ROBOT files are downloaded to the directory 
 _cmem_plugin_robotreason/workflow/bin_ and are not removed automatically when running `task clean`. The files can be

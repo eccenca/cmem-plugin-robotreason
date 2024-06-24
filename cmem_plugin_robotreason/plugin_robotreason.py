@@ -99,7 +99,7 @@ def convert_iri_to_filename(value: str) -> str:
             name="sub_class",
             label="SubClass",
             description="Generated Axioms",
-            default_value=False,
+            default_value=True,
             advanced=True,
         ),
         PluginParameter(
@@ -120,7 +120,7 @@ def convert_iri_to_filename(value: str) -> str:
         ),
         PluginParameter(
             param_type=BoolParameterType(),
-            name="Data_property_characteristic",
+            name="data_property_characteristic",
             label="DataPropertyCharacteristic",
             description="",
             default_value=False,
@@ -168,7 +168,7 @@ def convert_iri_to_filename(value: str) -> str:
         ),
         PluginParameter(
             param_type=BoolParameterType(),
-            name="inverse_bject_properties",
+            name="inverse_object_properties",
             label="InverseObjectProperties",
             description="",
             default_value=False,

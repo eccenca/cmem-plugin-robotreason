@@ -112,8 +112,8 @@ def convert_iri_to_filename(value: str) -> str:
         ),
         PluginParameter(
             param_type=BoolParameterType(),
-            name="disjoint_class",
-            label="Disjoint_Class",
+            name="disjoint_classes",
+            label="DisjointClasses",
             description="",
             default_value=False,
             advanced=True,
@@ -219,7 +219,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         reasoner: str = "elk",
         sub_class: bool = True,
         equivalent_class: bool = False,
-        disjoint_class: bool = False,
+        disjoint_classes: bool = False,
         data_property_characteristic: bool = False,
         equivalent_data_properties: bool = False,
         sub_data_property: bool = False,
@@ -240,7 +240,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         self.temp = f"robot_{uuid4().hex}"
         self.sub_class = sub_class
         self.equivalent_class = equivalent_class
-        self.disjoint_class = disjoint_class
+        self.disjoint_classes = disjoint_classes
         self.data_property_characteristic = data_property_characteristic
         self.equivalent_data_properties = equivalent_data_properties
         self.sub_data_property = sub_data_property
@@ -300,7 +300,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         axioms_dict = {
             "sub_class": "SubClass",
             "equivalent_class": "EquivalentClass",
-            "disjoint_class": "DisjointClass",
+            "disjoint_classes": "DisjointClasses",
             "data_property_characteristic": "DataPropertyCharacteristic",
             "equivalent_data_properties": "EquivalentDataProperties",
             "sub_data_property": "SubDataProperty",

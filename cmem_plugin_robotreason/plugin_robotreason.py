@@ -153,10 +153,10 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
-        inputs = f' --input "{self.temp}/{graphs[self.data_graph_iri]}"'
+        inputs = f'--input "{self.temp}/{graphs[self.data_graph_iri]}"'
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f"{ROBOT} merge{inputs} --collapse-import-closure false "
+            f"{ROBOT} merge {inputs} --collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "ClassAssertion PropertyAssertion" '
             f"--include-indirect true "
@@ -165,7 +165,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f"--exclude-tautologies all "
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
-            f"unmerge{inputs} "
+            f"unmerge {inputs} "
             f'annotate --ontology-iri "{self.result_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '

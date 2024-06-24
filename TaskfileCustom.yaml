@@ -11,8 +11,6 @@ tasks:
     cmds:
       - mkdir -p {{.ROBOT_DIR}}
       - curl -L -C - -o {{.ROBOT_DIR}}/robot.jar https://github.com/ontodev/robot/releases/download/v1.9.6/robot.jar
-      - curl -L -C - -o {{.ROBOT_DIR}}/robot https://raw.githubusercontent.com/ontodev/robot/2345420d04ab29b1d7087f22e3a666295ece6002/bin/robot
-      - chmod +x {{.ROBOT_DIR}}/robot
 
   clean_robot:
     desc: Removes ROBOT_DIR

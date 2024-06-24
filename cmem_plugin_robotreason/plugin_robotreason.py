@@ -29,7 +29,7 @@ from defusedxml import minidom
 
 from . import __path__
 
-ROBOT = Path(__path__[0]) / "bin" / "robot"
+ROBOT = Path(__path__[0]) / "bin" / "robot.jar"
 
 
 def convert_iri_to_filename(value: str) -> str:
@@ -323,7 +323,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         inputs = f'--input "{self.temp}/{graphs[self.data_graph_iri]}"'
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f"{ROBOT} merge {inputs} --collapse-import-closure false "
+            f"java -jar {ROBOT} merge {inputs} --collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{self.set_axioms()}" '
             f"--include-indirect true "

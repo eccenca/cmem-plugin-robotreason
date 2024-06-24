@@ -313,12 +313,9 @@ class RobotReasonPlugin(WorkflowPlugin):
             "object_property_range": "ObjectPropertyRange",
             "object_property_domain": "ObjectPropertyDomain",
         }
-
         axioms = " ".join(v for k, v in axioms_dict.items() if self.__dict__[k])
-
         if not axioms:
             raise ValueError("No axioms selected.")
-
         return axioms
 
     def reason(self, graphs: dict) -> None:

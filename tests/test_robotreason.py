@@ -43,6 +43,9 @@ def tests(_setup: None) -> None:
             ontology_graph_iri=ONTOLOGY_GRAPH_IRI,
             result_iri=RESULT_GRAPH_IRI,
             reasoner=reasoner,
+            sub_class=False,
+            class_assertion=True,
+            property_assertion=True,
         ).execute((), context=TestExecutionContext())
 
         result = Graph().parse(

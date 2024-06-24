@@ -23,7 +23,7 @@ from cmem_plugin_base.dataintegration.entity import Entities
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
-from cmem_plugin_base.dataintegration.types import StringParameterType
+from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from defusedxml import minidom
 
@@ -94,13 +94,143 @@ def convert_iri_to_filename(value: str) -> str:
             description="Reasoner option.",
             default_value="elk",
         ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="sub_class",
+            label="SubClass",
+            description="Generated Axioms",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="equivalent_class",
+            label="EquivalentClass",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="disjoint_class",
+            label="Disjoint_Class",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="Data_property_characteristic",
+            label="DataPropertyCharacteristic",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="equivalent_data_properties",
+            label="EquivalentDataProperties",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="sub_data_property",
+            label="SubDataProperty",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="class_assertion",
+            label="ClassAssertion",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="property_assertion",
+            label="PropertyAssertion",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="equivalent_object_property",
+            label="EquivalentObjectProperty",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="inverse_bject_properties",
+            label="InverseObjectProperties",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="object_property_characteristic",
+            label="ObjectPropertyCharacteristic",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="sub_object_property",
+            label="SubObjectProperty",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="object_property_range",
+            label="ObjectPropertyRange",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="object_property_domain",
+            label="ObjectPropertyDomain",
+            description="",
+            default_value=False,
+            advanced=True,
+        ),
     ],
 )
 class RobotReasonPlugin(WorkflowPlugin):
     """Robot reasoning plugin"""
 
-    def __init__(
-        self, data_graph_iri: str, ontology_graph_iri: str, result_iri: str, reasoner: str
+    def __init__(  # noqa: PLR0913
+        self,
+        data_graph_iri: str = "",
+        ontology_graph_iri: str = "",
+        result_iri: str = "",
+        reasoner: str = "elk",
+        sub_class: bool = True,
+        equivalent_class: bool = False,
+        disjoint_class: bool = False,
+        data_property_characteristic: bool = False,
+        equivalent_data_properties: bool = False,
+        sub_data_property: bool = False,
+        class_assertion: bool = False,
+        property_assertion: bool = False,
+        equivalent_object_property: bool = False,
+        inverse_object_properties: bool = False,
+        object_property_characteristic: bool = False,
+        sub_object_property: bool = False,
+        object_property_range: bool = False,
+        object_property_domain: bool = False,
     ) -> None:
         """Init"""
         self.data_graph_iri = data_graph_iri
@@ -108,6 +238,20 @@ class RobotReasonPlugin(WorkflowPlugin):
         self.result_iri = result_iri
         self.reasoner = reasoner
         self.temp = f"robot_{uuid4().hex}"
+        self.sub_class = sub_class
+        self.equivalent_class = equivalent_class
+        self.disjoint_class = disjoint_class
+        self.data_property_characteristic = data_property_characteristic
+        self.equivalent_data_properties = equivalent_data_properties
+        self.sub_data_property = sub_data_property
+        self.class_assertion = class_assertion
+        self.property_assertion = property_assertion
+        self.equivalent_object_property = equivalent_object_property
+        self.inverse_object_properties = inverse_object_properties
+        self.object_property_characteristic = object_property_characteristic
+        self.sub_object_property = sub_object_property
+        self.object_property_range = object_property_range
+        self.object_property_domain = object_property_domain
 
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
@@ -151,6 +295,32 @@ class RobotReasonPlugin(WorkflowPlugin):
                             graphs[iri] = convert_iri_to_filename(iri)
         return graphs
 
+    def set_axioms(self) -> str:
+        """Set asserted axioms"""
+        axioms_dict = {
+            "sub_class": "SubClass",
+            "equivalent_class": "EquivalentClass",
+            "disjoint_class": "DisjointClass",
+            "data_property_characteristic": "DataPropertyCharacteristic",
+            "equivalent_data_properties": "EquivalentDataProperties",
+            "sub_data_property": "SubDataProperty",
+            "class_assertion": "ClassAssertion",
+            "property_assertion": "PropertyAssertion",
+            "equivalent_object_property": "EquivalentObjectProperty",
+            "inverse_object_properties": "InverseObjectProperties",
+            "object_property_characteristic": "ObjectPropertyCharacteristic",
+            "sub_object_property": "SubObjectProperty",
+            "object_property_range": "ObjectPropertyRange",
+            "object_property_domain": "ObjectPropertyDomain",
+        }
+
+        axioms = " ".join(v for k, v in axioms_dict.items() if self.__dict__[k])
+
+        if not axioms:
+            raise ValueError("No axioms selected.")
+
+        return axioms
+
     def reason(self, graphs: dict) -> None:
         """Reason"""
         inputs = f'--input "{self.temp}/{graphs[self.data_graph_iri]}"'
@@ -158,7 +328,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         cmd = (
             f"{ROBOT} merge {inputs} --collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
-            f'--axiom-generators "ClassAssertion PropertyAssertion" '
+            f'--axiom-generators "{self.set_axioms()}" '
             f"--include-indirect true "
             f"--exclude-duplicate-axioms true "
             f"--exclude-owl-thing true "

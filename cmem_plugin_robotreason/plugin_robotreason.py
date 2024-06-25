@@ -329,7 +329,6 @@ class RobotReasonPlugin(WorkflowPlugin):
     def reason(self, graphs: dict) -> None:
         """Reason"""
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
-        vocab_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
             f'java -jar {ROBOT} merge --input "{data_location}" '
@@ -342,7 +341,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f"--exclude-tautologies all "
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
-            f'unmerge --input "{data_location}" --input "{vocab_location}" '
+            f'unmerge --input "{data_location}" '
             f'annotate --ontology-iri "{self.result_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '

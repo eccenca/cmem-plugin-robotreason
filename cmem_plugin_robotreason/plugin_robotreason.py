@@ -360,10 +360,12 @@ class RobotReasonPlugin(WorkflowPlugin):
             f'--output "{self.temp}/result.ttl"'
         )
         response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
-        if response.stdout:
-            raise OSError(response.stdout.decode())
-        if response.stderr and not response.stderr.startswith(b"Picked up"):
-            raise OSError(response.stderr.decode())
+        if response.returncode != 0:
+            if response.stdout:
+                raise OSError(response.stdout.decode())
+            if response.stderr:
+                raise OSError(response.stderr.decode())
+            raise OSError("ROBOT error")
 
     def send_result(self) -> None:
         """Send result"""

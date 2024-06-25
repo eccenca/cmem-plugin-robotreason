@@ -253,6 +253,11 @@ class RobotReasonPlugin(WorkflowPlugin):
         self.object_property_range = object_property_range
         self.object_property_domain = object_property_domain
 
+        if result_iri == data_graph_iri:
+            raise ValueError("Result graph IRI cannot be the same as the data graph IRI.")
+        if result_iri == ontology_graph_iri:
+            raise ValueError("Result graph IRI cannot be the same as the ontology graph IRI.")
+
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
         file_name = Path(self.temp) / "catalog-v001.xml"
@@ -320,10 +325,12 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
-        inputs = f'--input "{self.temp}/{graphs[self.data_graph_iri]}"'
+        data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
+        vocab_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f"java -jar {ROBOT} merge {inputs} --collapse-import-closure false "
+            f'java -jar {ROBOT} merge --input "{data_location}" '
+            "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{self.set_axioms()}" '
             f"--include-indirect true "
@@ -332,7 +339,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f"--exclude-tautologies all "
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
-            f"unmerge {inputs} "
+            f'unmerge --input "{data_location}" --input "{vocab_location}" '
             f'annotate --ontology-iri "{self.result_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '
@@ -347,6 +354,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )
+
         run(shlex.split(cmd), check=False)  # noqa: S603
 
     def send_result(self) -> None:

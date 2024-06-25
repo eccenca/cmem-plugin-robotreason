@@ -11,7 +11,7 @@ an OBO Tool). It takes an OWL ontology and a data graph as inputs and writes the
 
 ## Build
 
-:bulb: Prior to the build process, the Java library _robot.jar_ (v1.9.6) is automatically
+:bulb: Prior to the build process, the file _robot.jar_ (v1.9.6) is automatically
 downloaded from the [ROBOT GitHub repository](https://github.com/ontodev/robot). The file is downloaded to the directory 
 _cmem_plugin_robotreason/workflow/bin_ and is not removed automatically when running `task clean`. The file can be
 removed with `task custom:clean_robot`.

@@ -16,6 +16,7 @@ from xml.etree.ElementTree import (
     tostring,
 )
 
+import validators.url
 from cmem.cmempy.dp.proxy.graph import get, get_graph_import_tree, post_streamed
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
@@ -257,6 +258,8 @@ class RobotReasonPlugin(WorkflowPlugin):
             raise ValueError("Result graph IRI cannot be the same as the data graph IRI.")
         if result_iri == ontology_graph_iri:
             raise ValueError("Result graph IRI cannot be the same as the ontology graph IRI.")
+        if not validators.url(result_iri):
+            raise ValueError("Result graph IRI is invalid")
 
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
@@ -354,8 +357,11 @@ class RobotReasonPlugin(WorkflowPlugin):
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )
-
-        run(shlex.split(cmd), check=False)  # noqa: S603
+        response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+        if response.stdout:
+            raise OSError(response.stdout.decode())
+        if response.stderr:
+            raise OSError(response.stderr.decode())
 
     def send_result(self) -> None:
         """Send result"""

@@ -7,7 +7,7 @@ vars:
 tasks:
 
   download_robot:
-    desc: Download ROBOT jar and bash script
+    desc: Download ROBOT jar
     cmds:
       - mkdir -p {{.ROBOT_DIR}}
       - curl -L -C - -o {{.ROBOT_DIR}}/robot.jar https://github.com/ontodev/robot/releases/download/v1.9.6/robot.jar

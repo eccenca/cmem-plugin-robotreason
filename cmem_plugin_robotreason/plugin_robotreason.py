@@ -334,7 +334,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f'java -jar {ROBOT} merge --input "{data_location}" '
+            f'java -XX:MaxRAMPercentage=15 -jar {ROBOT} merge --input "{data_location}" '
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{self.set_axioms()}" '

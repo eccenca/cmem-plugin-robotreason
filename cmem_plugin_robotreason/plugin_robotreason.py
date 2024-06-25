@@ -259,7 +259,26 @@ class RobotReasonPlugin(WorkflowPlugin):
         if result_iri == ontology_graph_iri:
             raise ValueError("Result graph IRI cannot be the same as the ontology graph IRI.")
         if not validators.url(result_iri):
-            raise ValueError("Result graph IRI is invalid")
+            raise ValueError("Result graph IRI is invalid.")
+
+        self.axioms_dict = {
+            "sub_class": "SubClass",
+            "equivalent_class": "EquivalentClass",
+            "disjoint_classes": "DisjointClasses",
+            "data_property_characteristic": "DataPropertyCharacteristic",
+            "equivalent_data_properties": "EquivalentDataProperties",
+            "sub_data_property": "SubDataProperty",
+            "class_assertion": "ClassAssertion",
+            "property_assertion": "PropertyAssertion",
+            "equivalent_object_property": "EquivalentObjectProperty",
+            "inverse_object_properties": "InverseObjectProperties",
+            "object_property_characteristic": "ObjectPropertyCharacteristic",
+            "sub_object_property": "SubObjectProperty",
+            "object_property_range": "ObjectPropertyRange",
+            "object_property_domain": "ObjectPropertyDomain",
+        }
+        if True not in [self.__dict__[k] for k in self.axioms_dict]:
+            raise ValueError("No axiom generator selected.")
 
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
@@ -305,23 +324,7 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def set_axioms(self) -> str:
         """Set asserted axioms"""
-        axioms_dict = {
-            "sub_class": "SubClass",
-            "equivalent_class": "EquivalentClass",
-            "disjoint_classes": "DisjointClasses",
-            "data_property_characteristic": "DataPropertyCharacteristic",
-            "equivalent_data_properties": "EquivalentDataProperties",
-            "sub_data_property": "SubDataProperty",
-            "class_assertion": "ClassAssertion",
-            "property_assertion": "PropertyAssertion",
-            "equivalent_object_property": "EquivalentObjectProperty",
-            "inverse_object_properties": "InverseObjectProperties",
-            "object_property_characteristic": "ObjectPropertyCharacteristic",
-            "sub_object_property": "SubObjectProperty",
-            "object_property_range": "ObjectPropertyRange",
-            "object_property_domain": "ObjectPropertyDomain",
-        }
-        axioms = " ".join(v for k, v in axioms_dict.items() if self.__dict__[k])
+        axioms = " ".join(v for k, v in self.axioms_dict.items() if self.__dict__[k])
         if not axioms:
             raise ValueError("No axioms selected.")
         return axioms

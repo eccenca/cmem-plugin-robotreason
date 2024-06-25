@@ -362,7 +362,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
         if response.stdout:
             raise OSError(response.stdout.decode())
-        if response.stderr:
+        if response.stderr and not response.stderr.startswith(b"Picked up"):
             raise OSError(response.stderr.decode())
 
     def send_result(self) -> None:

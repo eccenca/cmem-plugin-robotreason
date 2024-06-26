@@ -397,5 +397,6 @@ class RobotReasonPlugin(WorkflowPlugin):
         self.get_graphs(graphs)
         self.create_xml_catalog_file(graphs)
         self.reason(graphs)
+        setup_cmempy_user_access(context.user)
         self.send_result()
         self.clean_up(graphs)

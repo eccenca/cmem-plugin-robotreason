@@ -31,6 +31,16 @@ from defusedxml import minidom
 from . import __path__
 
 ROBOT = Path(__path__[0]) / "bin" / "robot.jar"
+REASONERS = OrderedDict(
+    {
+        "elk": "ELK",
+        "emr": "Expression Materializing Reasoner",
+        "hermit": "HermiT",
+        "jfact": "JFact",
+        "structural": "Structural Reasoner",
+        "whelk": "Whelk",
+    }
+)
 
 
 def convert_iri_to_filename(value: str) -> str:
@@ -78,18 +88,7 @@ def convert_iri_to_filename(value: str) -> str:
             "WARNING: existing graph will be overwritten!",
         ),
         PluginParameter(
-            param_type=ChoiceParameterType(
-                OrderedDict(
-                    {
-                        "elk": "ELK",
-                        "emr": "Expression Materializing Reasoner",
-                        "hermit": "HermiT",
-                        "jfact": "JFact",
-                        "structural": "Structural Reasoner",
-                        "whelk": "Whelk",
-                    }
-                )
-            ),
+            param_type=ChoiceParameterType(REASONERS),
             name="reasoner",
             label="Reasoner",
             description="Reasoner option.",
@@ -264,6 +263,8 @@ class RobotReasonPlugin(WorkflowPlugin):
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
         if result_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
+        if reasoner not in REASONERS.keys():
+            errors += "Invalid value for parameter Reasoner. "
         not_bool = sorted([k for k, v in self.axioms.items() if not isinstance(v, bool)])
         if not_bool:
             errors += f"Invalid value for parameters: {', '.join(not_bool)}. "

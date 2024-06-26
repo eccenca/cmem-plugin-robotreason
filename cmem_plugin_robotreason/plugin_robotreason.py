@@ -296,12 +296,13 @@ class RobotReasonPlugin(WorkflowPlugin):
             file.truncate(0)
             file.write(reparsed)
 
-    def get_graphs(self, graphs: dict) -> None:
+    def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
         if not Path(self.temp).exists():
             Path(self.temp).mkdir(parents=True)
         for graph in graphs:
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
+                setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
                 if graph == self.data_graph_iri:
                     file.write(
@@ -394,7 +395,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         """Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = self.get_graphs_tree()
-        self.get_graphs(graphs)
+        self.get_graphs(graphs, context)
         self.create_xml_catalog_file(graphs)
         self.reason(graphs)
         setup_cmempy_user_access(context.user)

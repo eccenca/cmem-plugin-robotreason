@@ -46,7 +46,7 @@ def convert_iri_to_filename(value: str) -> str:
 @Plugin(
     label="Reasoning with ROBOT",
     icon=Icon(file_name="obofoundry.png", package=__package__),
-    description="Given a data and an ontology graph, this task performs reasoning " "using ROBOT.",
+    description="Given a data and an ontology graph, this task performs reasoning using ROBOT.",
     documentation="""A task performing reasoning using ROBOT (ROBOT is an OBO Tool).
     It takes an OWL ontology and a data graph as inputs and writes the reasoning result
     to a specified graph. The following reasoner options are supported: ELK, Expression

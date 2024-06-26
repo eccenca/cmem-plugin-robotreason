@@ -234,7 +234,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         sub_object_property: bool = False,
     ) -> None:
         """Init"""
-        self.axioms_dict = {
+        self.axioms = {
             "SubClass": sub_class,
             "EquivalentClass": equivalent_class,
             "DisjointClasses": disjoint_classes,
@@ -252,22 +252,22 @@ class RobotReasonPlugin(WorkflowPlugin):
         }
 
         errors = ""
-        iris = [
-            (data_graph_iri, "Data graph IRI"),
-            (ontology_graph_iri, "Ontology graph IRI"),
-            (result_graph_iri, "Result graph IRI"),
-        ]
-        not_iri = sorted([i[1] for i in iris if not validators.url(i[0])], key=lambda n: n[1])
+        iris = {
+            "Data graph IRI": data_graph_iri,
+            "Ontology graph IRI": ontology_graph_iri,
+            "Result graph IRI": result_graph_iri,
+        }
+        not_iri = sorted([k for k, v in iris.items() if not validators.url(v)])
         if not_iri:
             errors += f"Invalid IRI for parameters: {', '.join(not_iri)}. "
         if result_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
         if result_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
-        not_bool = sorted([k for k, v in self.axioms_dict.items() if not isinstance(v, bool)])
+        not_bool = sorted([k for k, v in self.axioms.items() if not isinstance(v, bool)])
         if not_bool:
             errors += f"Invalid value for parameters: {', '.join(not_bool)}. "
-        if True not in self.axioms_dict.values():
+        if True not in self.axioms.values():
             errors += "No axiom generator selected. "
         if errors:
             raise ValueError(errors[:-1])
@@ -323,7 +323,7 @@ class RobotReasonPlugin(WorkflowPlugin):
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
-        axioms = " ".join(k for k, v in self.axioms_dict.items() if v)
+        axioms = " ".join(k for k, v in self.axioms.items() if v)
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (

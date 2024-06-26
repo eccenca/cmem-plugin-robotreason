@@ -263,7 +263,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
         if result_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
-        if reasoner not in REASONERS.keys():
+        if reasoner not in REASONERS:
             errors += "Invalid value for parameter Reasoner. "
         not_bool = sorted([k for k, v in self.axioms.items() if not isinstance(v, bool)])
         if not_bool:

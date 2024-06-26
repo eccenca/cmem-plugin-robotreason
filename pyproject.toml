@@ -20,7 +20,6 @@ homepage = "https://github.com/eccenca/cmem-plugin-robotreason"
 [tool.poetry.dependencies]
 # if you need to change python version here, change it also in .python-version
 python = "^3.11"
-defusedxml = "^0.7.1"
 validators = "^0.28.3"
 
 [tool.poetry.dependencies.cmem-plugin-base]

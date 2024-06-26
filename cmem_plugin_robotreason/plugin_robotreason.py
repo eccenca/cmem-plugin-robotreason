@@ -72,7 +72,7 @@ def convert_iri_to_filename(value: str) -> str:
         ),
         PluginParameter(
             param_type=StringParameterType(),
-            name="result_iri",
+            name="result_graph_iri",
             label="Result graph IRI",
             description="The IRI of the output graph for the reasoning result. "
             "WARNING: existing graph will be overwritten!",
@@ -216,7 +216,7 @@ class RobotReasonPlugin(WorkflowPlugin):
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
-        result_iri: str = "",
+        result_graph_iri: str = "",
         reasoner: str = "elk",
         class_assertion: bool = False,
         data_property_characteristic: bool = False,
@@ -234,51 +234,49 @@ class RobotReasonPlugin(WorkflowPlugin):
         sub_object_property: bool = False,
     ) -> None:
         """Init"""
+        self.axioms_dict = {
+            "SubClass": sub_class,
+            "EquivalentClass": equivalent_class,
+            "DisjointClasses": disjoint_classes,
+            "DataPropertyCharacteristic": data_property_characteristic,
+            "EquivalentDataProperties": equivalent_data_properties,
+            "SubDataProperty": sub_data_property,
+            "ClassAssertion": class_assertion,
+            "PropertyAssertion": property_assertion,
+            "EquivalentObjectProperty": equivalent_object_property,
+            "InverseObjectProperties": inverse_object_properties,
+            "ObjectPropertyCharacteristic": object_property_characteristic,
+            "SubObjectProperty": sub_object_property,
+            "ObjectPropertyRange": object_property_range,
+            "ObjectPropertyDomain": object_property_domain,
+        }
+
+        errors = ""
+        iris = [
+            (data_graph_iri, "Data graph IRI"),
+            (ontology_graph_iri, "Ontology graph IRI"),
+            (result_graph_iri, "Result graph IRI"),
+        ]
+        not_iri = sorted([i[1] for i in iris if not validators.url(i[0])], key=lambda n: n[1])
+        if not_iri:
+            errors += f"Invalid IRI for parameters: {', '.join(not_iri)}. "
+        if result_graph_iri == data_graph_iri:
+            errors += "Result graph IRI cannot be the same as the data graph IRI. "
+        if result_graph_iri == ontology_graph_iri:
+            errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
+        not_bool = sorted([k for k, v in self.axioms_dict.items() if not isinstance(v, bool)])
+        if not_bool:
+            errors += f"Invalid value for parameters: {', '.join(not_bool)}. "
+        if True not in self.axioms_dict.values():
+            errors += "No axiom generator selected. "
+        if errors:
+            raise ValueError(errors[:-1])
+
         self.data_graph_iri = data_graph_iri
         self.ontology_graph_iri = ontology_graph_iri
-        self.result_iri = result_iri
+        self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
         self.temp = f"robot_{uuid4().hex}"
-        self.sub_class = sub_class
-        self.equivalent_class = equivalent_class
-        self.disjoint_classes = disjoint_classes
-        self.data_property_characteristic = data_property_characteristic
-        self.equivalent_data_properties = equivalent_data_properties
-        self.sub_data_property = sub_data_property
-        self.class_assertion = class_assertion
-        self.property_assertion = property_assertion
-        self.equivalent_object_property = equivalent_object_property
-        self.inverse_object_properties = inverse_object_properties
-        self.object_property_characteristic = object_property_characteristic
-        self.sub_object_property = sub_object_property
-        self.object_property_range = object_property_range
-        self.object_property_domain = object_property_domain
-
-        if result_iri == data_graph_iri:
-            raise ValueError("Result graph IRI cannot be the same as the data graph IRI.")
-        if result_iri == ontology_graph_iri:
-            raise ValueError("Result graph IRI cannot be the same as the ontology graph IRI.")
-        if not validators.url(result_iri):
-            raise ValueError("Result graph IRI is invalid.")
-
-        self.axioms_dict = {
-            "sub_class": "SubClass",
-            "equivalent_class": "EquivalentClass",
-            "disjoint_classes": "DisjointClasses",
-            "data_property_characteristic": "DataPropertyCharacteristic",
-            "equivalent_data_properties": "EquivalentDataProperties",
-            "sub_data_property": "SubDataProperty",
-            "class_assertion": "ClassAssertion",
-            "property_assertion": "PropertyAssertion",
-            "equivalent_object_property": "EquivalentObjectProperty",
-            "inverse_object_properties": "InverseObjectProperties",
-            "object_property_characteristic": "ObjectPropertyCharacteristic",
-            "sub_object_property": "SubObjectProperty",
-            "object_property_range": "ObjectPropertyRange",
-            "object_property_domain": "ObjectPropertyDomain",
-        }
-        if True not in [self.__dict__[k] for k in self.axioms_dict]:
-            raise ValueError("No axiom generator selected.")
 
     def create_xml_catalog_file(self, graphs: dict) -> None:
         """Create XML catalog file"""
@@ -323,22 +321,16 @@ class RobotReasonPlugin(WorkflowPlugin):
                             graphs[iri] = convert_iri_to_filename(iri)
         return graphs
 
-    def set_axioms(self) -> str:
-        """Set asserted axioms"""
-        axioms = " ".join(v for k, v in self.axioms_dict.items() if self.__dict__[k])
-        if not axioms:
-            raise ValueError("No axioms selected.")
-        return axioms
-
     def reason(self, graphs: dict) -> None:
         """Reason"""
+        axioms = " ".join(k for k, v in self.axioms_dict.items() if v)
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
             f'java -XX:MaxRAMPercentage=15 -jar {ROBOT} merge --input "{data_location}" '
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
-            f'--axiom-generators "{self.set_axioms()}" '
+            f'--axiom-generators "{axioms}" '
             f"--include-indirect true "
             f"--exclude-duplicate-axioms true "
             f"--exclude-owl-thing true "
@@ -346,7 +338,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
             f'unmerge --input "{data_location}" '
-            f'annotate --ontology-iri "{self.result_iri}" '
+            f'annotate --ontology-iri "{self.result_graph_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '
             f"--language-annotation rdfs:comment "
@@ -371,7 +363,7 @@ class RobotReasonPlugin(WorkflowPlugin):
     def send_result(self) -> None:
         """Send result"""
         post_streamed(
-            self.result_iri,
+            self.result_graph_iri,
             str(Path(self.temp) / "result.ttl"),
             replace=True,
             content_type="text/turtle",

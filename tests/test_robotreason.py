@@ -41,7 +41,7 @@ def tests(_setup: None) -> None:
         RobotReasonPlugin(
             data_graph_iri=DATA_GRAPH_IRI,
             ontology_graph_iri=ONTOLOGY_GRAPH_IRI,
-            result_iri=RESULT_GRAPH_IRI,
+            result_graph_iri=RESULT_GRAPH_IRI,
             reasoner=reasoner,
             sub_class=False,
             class_assertion=True,

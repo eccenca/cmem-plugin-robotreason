@@ -43,8 +43,6 @@ jobs:
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
-          mkdir -p {{.ROBOT_DIR}}
-          curl -L -C - -o {{.ROBOT_DIR}}/robot.jar https://github.com/ontodev/robot/releases/download/v1.9.6/robot.jar
           poetry config pypi-token.pypi "$PYPI_TOKEN"
           poetry publish --build
 

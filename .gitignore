@@ -147,6 +147,3 @@ co
 artifacts
 .DS_Store
 .task
-
-# ROBOT
-cmem_plugin_reason/bin/

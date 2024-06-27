@@ -13,11 +13,6 @@ vars:
   PACKAGE: cmem_plugin_$project_slug
   DIST_DIR: dist
 
-includes:
-  custom:
-    taskfile: ./TaskfileCustom.yaml
-    optional: true
-
 tasks:
 
   default:
@@ -108,7 +103,6 @@ tasks:
     <<: *preparation
     cmds:
       # --memray is not used on windows
-      - task: custom:download_robot
       - platforms: [windows]
         cmd: >
           poetry run pytest --junitxml={{.JUNIT_FILE}}
@@ -175,7 +169,6 @@ tasks:
     <<: *preparation
     deps:
       - clean
-      - custom:download_robot
       - poetry:check
     cmds:
       - poetry build

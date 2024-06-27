@@ -1,0 +1,21 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+
+<https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/output/> a owl:Ontology ;
+    rdfs:comment "Ontology validation of <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/>"@en ;
+    prov:wasDerivedFrom <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/> ;
+    prov:wasGeneratedBy "cmem-plugin-validate (elk)"@en .
+
+<https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/D_6> a owl:NamedIndividual,
+        <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/A> .
+
+<https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/A> a owl:Class ;
+    rdfs:subClassOf <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/B> ;
+    owl:disjointWith <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/B> .
+
+<https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/B> a owl:Class .
+

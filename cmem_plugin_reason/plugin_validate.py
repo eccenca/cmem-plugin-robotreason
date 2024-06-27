@@ -240,7 +240,7 @@ class ValidatePlugin(WorkflowPlugin):
 
     def clean_up(self, graphs: dict) -> None:
         """Remove temporary files"""
-        files = ["catalog-v001.xml", "result.ttl", self.md_filename]
+        files = ["catalog-v001.xml", "output.ttl", self.md_filename]
         files += list(graphs.values())
         for file in files:
             try:

@@ -59,6 +59,16 @@ def _setup(request: pytest.FixtureRequest) -> None:
 def tests(_setup: None) -> None:
     """Tests for reason plugin"""
 
+    def get_remote_graph(iri: str) -> Graph:
+        graph = Graph().parse(
+            data=get(iri, owl_imports_resolution=False).text,
+            format="turtle",
+        )
+        graph.remove((URIRef(iri), DCTERMS.created, None))
+        graph.remove((URIRef(iri), RDFS.label, None))
+        graph.remove((None, RDF.type, OWL.AnnotationProperty))
+        return graph
+
     def test_reasoner(reasoner: str, err_list: list) -> list:
         ReasonPlugin(
             data_graph_iri=REASON_DATA_GRAPH_IRI,
@@ -70,14 +80,7 @@ def tests(_setup: None) -> None:
             property_assertion=True,
         ).execute((), context=TestExecutionContext())
 
-        result = Graph().parse(
-            data=get(REASON_RESULT_GRAPH_IRI, owl_imports_resolution=False).text,
-            format="turtle",
-        )
-        result.remove((URIRef(REASON_RESULT_GRAPH_IRI), DCTERMS.created, None))
-        result.remove((URIRef(REASON_RESULT_GRAPH_IRI), RDFS.label, None))
-        result.remove((None, RDF.type, OWL.AnnotationProperty))
-
+        result = get_remote_graph(REASON_RESULT_GRAPH_IRI)
         test = Graph().parse(Path(__path__[0]) / f"test_{reasoner}.ttl", format="turtle")
         if to_isomorphic(result) != to_isomorphic(test):
             err_list.append(reasoner)
@@ -99,12 +102,7 @@ def tests(_setup: None) -> None:
         if not cmp(MD_FILENAME, mdfile_test):
             errors += "Markdown file error ."
 
-        output_graph = Graph().parse(
-            data=get(OUTPUT_GRAPH_IRI, owl_imports_resolution=False).text,
-        )
-        output_graph.remove((URIRef(OUTPUT_GRAPH_IRI), DCTERMS.created, None))
-        output_graph.remove((URIRef(OUTPUT_GRAPH_IRI), RDFS.label, None))
-        output_graph.remove((None, RDF.type, OWL.AnnotationProperty))
+        output_graph = get_remote_graph(OUTPUT_GRAPH_IRI)
         test = Graph().parse(Path(__path__[0]) / "test_validate_output.ttl", format="turtle")
         if to_isomorphic(output_graph) != to_isomorphic(test):
             errors += "Output graph error. "

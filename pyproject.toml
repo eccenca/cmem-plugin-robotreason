@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cmem-plugin-reason"
-version = "1.0.0alpha1"
+version = "0.0.0"
 license = "Apache-2.0"
 description = "Reasoning with Robot"
 authors = ["eccenca GmbH <info@eccenca.com>"]

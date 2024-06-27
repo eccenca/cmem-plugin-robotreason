@@ -3,8 +3,8 @@ _commit: v6.3.1
 _src_path: gh:eccenca/cmem-plugin-template
 author_mail: info@eccenca.com
 author_name: eccenca GmbH
-github_page: https://github.com/eccenca/cmem-plugin-robotreason
+github_page: https://github.com/eccenca/cmem-plugin-reason
 project_description: Reasoning with Robot
-project_slug: robotreason
+project_slug: reason
 pypi: false
 

@@ -54,7 +54,7 @@ def convert_iri_to_filename(value: str) -> str:
 
 
 @Plugin(
-    label="Reasoning with ROBOT",
+    label="Reason",
     icon=Icon(file_name="obofoundry.png", package=__package__),
     description="Given a data and an ontology graph, this task performs reasoning using ROBOT.",
     documentation="""A task performing reasoning using ROBOT (ROBOT is an OBO Tool).
@@ -208,7 +208,7 @@ def convert_iri_to_filename(value: str) -> str:
         ),
     ],
 )
-class RobotReasonPlugin(WorkflowPlugin):
+class ReasonPlugin(WorkflowPlugin):
     """Robot reasoning plugin"""
 
     def __init__(  # noqa: PLR0913
@@ -343,7 +343,7 @@ class RobotReasonPlugin(WorkflowPlugin):
             f'"Reasoning result set of <{self.data_graph_iri}> and '
             f'<{self.ontology_graph_iri}>" en '
             f"--language-annotation prov:wasGeneratedBy "
-            f'"cmem-plugin-robotreason ({self.reasoner})" en '
+            f'"cmem-plugin-reason ({self.reasoner})" en '
             f'--link-annotation prov:wasDerivedFrom "{self.data_graph_iri}" '
             f"--link-annotation prov:wasDerivedFrom "
             f'"{self.ontology_graph_iri}" '

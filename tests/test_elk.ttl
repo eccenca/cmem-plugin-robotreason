@@ -13,7 +13,7 @@
                                                     rdfs:comment "Reasoning result set of <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> and <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/>"@en ;
                                                     prov:wasDerivedFrom
                 <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> , <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/> ;
-                                                                            prov:wasGeneratedBy "cmem-plugin-robotreason (elk)"@en .
+                                                                            prov:wasGeneratedBy "cmem-plugin-reason (elk)"@en .
 
 #################################################################
 #    Individuals

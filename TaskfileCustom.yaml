@@ -2,7 +2,7 @@
 version: '3'
 
 vars:
-  ROBOT_DIR: cmem_plugin_robotreason/bin
+  ROBOT_DIR: cmem_plugin_reason/bin
 
 tasks:
 

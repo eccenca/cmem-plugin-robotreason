@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cmem-plugin-robotreason"
+name = "cmem-plugin-reason"
 version = "0.0.0.post1.dev0+6211d4d"
 license = "Apache-2.0"
 description = "Reasoning with Robot"
@@ -13,14 +13,15 @@ readme = "README-public.md"
 keywords = [
     "eccenca Corporate Memory", "plugin"
 ]
-include = ["cmem_plugin_robotreason/bin/*"]
+include = ["cmem_plugin_reason/bin/*"]
 
-homepage = "https://github.com/eccenca/cmem-plugin-robotreason"
+homepage = "https://github.com/eccenca/cmem-plugin-reason"
 
 [tool.poetry.dependencies]
 # if you need to change python version here, change it also in .python-version
 python = "^3.11"
 validators = "^0.28.3"
+pathvalidate = "^3.2.0"
 
 [tool.poetry.dependencies.cmem-plugin-base]
 version = "^4.5.0"

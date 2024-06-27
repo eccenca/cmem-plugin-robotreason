@@ -13,7 +13,6 @@ readme = "README-public.md"
 keywords = [
     "eccenca Corporate Memory", "plugin"
 ]
-include = ["cmem_plugin_reason/bin/robot.jar"]
 
 homepage = "https://github.com/eccenca/cmem-plugin-reason"
 

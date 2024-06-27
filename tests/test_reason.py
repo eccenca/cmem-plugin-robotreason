@@ -1,7 +1,6 @@
 """Plugin tests."""
 
 from contextlib import suppress
-from filecmp import cmp
 from pathlib import Path
 
 import pytest
@@ -51,12 +50,11 @@ def _setup(request: pytest.FixtureRequest) -> None:
     request.addfinalizer(lambda: delete(REASON_RESULT_GRAPH_IRI))
     request.addfinalizer(lambda: delete_project(PROJECT_ID))
     request.addfinalizer(lambda: delete(OUTPUT_GRAPH_IRI))
-    request.addfinalizer(lambda: delete(VALIDATE_ONTOLOGY_GRAPH_IRI))
-    request.addfinalizer(lambda: Path(MD_FILENAME).unlink())  # noqa: PT021
+    request.addfinalizer(lambda: delete(VALIDATE_ONTOLOGY_GRAPH_IRI))  # noqa: PT021
 
 
 @needs_cmem
-def tests(_setup: None) -> None:
+def tests(_setup: None) -> None:  # noqa: C901
     """Tests for reason plugin"""
 
     def get_remote_graph(iri: str) -> Graph:
@@ -87,7 +85,7 @@ def tests(_setup: None) -> None:
         return err_list
 
     def test_validate(errors: str) -> str:
-        ValidatePlugin(
+        result = ValidatePlugin(
             ontology_graph_iri=VALIDATE_ONTOLOGY_GRAPH_IRI,
             produce_graph=True,
             output_graph_iri=OUTPUT_GRAPH_IRI,
@@ -95,17 +93,22 @@ def tests(_setup: None) -> None:
             md_filename=MD_FILENAME,
         ).execute((), context=TestExecutionContext(PROJECT_ID))
 
-        with Path(MD_FILENAME).open("wb") as md:
-            md.write(get_resource(PROJECT_ID, MD_FILENAME))
-        mdfile_test = Path(__path__[0]) / "test_validate.md"
-        errors = ""
-        if not cmp(MD_FILENAME, mdfile_test):
-            errors += "Markdown file error ."
+        val_errors = ""
+        md_test = (Path(__path__[0]) / "test_validate.md").read_text()
+
+        if md_test != next(iter(result.entities)).values[0][0]:  # type: ignore[union-attr]
+            val_errors += "Entities output error. "
+
+        if md_test != get_resource(PROJECT_ID, MD_FILENAME).decode():
+            val_errors += "Markdown file error. "
 
         output_graph = get_remote_graph(OUTPUT_GRAPH_IRI)
         test = Graph().parse(Path(__path__[0]) / "test_validate_output.ttl", format="turtle")
         if to_isomorphic(output_graph) != to_isomorphic(test):
-            errors += "Output graph error. "
+            val_errors += "Output graph error. "
+
+        if val_errors:
+            errors += "Validate: " + val_errors
         return errors
 
     errors_list: list[str] = []
@@ -115,7 +118,7 @@ def tests(_setup: None) -> None:
 
     errors = ""
     if errors_list:
-        errors += f"Test failed for reasoners: {', '.join(errors_list)}. "
+        errors += f"Reason: test failed for reasoners {', '.join(errors_list)}. "
 
     errors = test_validate(errors)
 

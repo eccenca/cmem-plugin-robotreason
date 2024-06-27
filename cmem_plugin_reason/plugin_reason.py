@@ -1,23 +1,15 @@
 """Reasoning with robot plugin module"""
 
-import re
 import shlex
-import unicodedata
-from collections import OrderedDict
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import run
 from time import time
 from uuid import uuid4
-from xml.etree.ElementTree import (
-    Element,
-    SubElement,
-    tostring,
-)
 
 import validators.url
-from cmem.cmempy.dp.proxy.graph import get, get_graph_import_tree, post_streamed
+from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.entity import Entities
@@ -26,31 +18,14 @@ from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
-from defusedxml import minidom
 
-from . import __path__
-
-ROBOT = Path(__path__[0]) / "bin" / "robot.jar"
-REASONERS = OrderedDict(
-    {
-        "elk": "ELK",
-        "emr": "Expression Materializing Reasoner",
-        "hermit": "HermiT",
-        "jfact": "JFact",
-        "structural": "Structural Reasoner",
-        "whelk": "Whelk",
-    }
+from cmem_plugin_reason.utils import (
+    REASONERS,
+    ROBOT,
+    create_xml_catalog_file,
+    get_graphs_tree,
+    send_result,
 )
-
-
-def convert_iri_to_filename(value: str) -> str:
-    """Convert IRI to filename"""
-    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
-    value = re.sub(r"\.", "_", value.lower())
-    value = re.sub(r"/", "_", value.lower())
-    value = re.sub(r"[^\w\s-]", "", value.lower())
-    value = re.sub(r"[-\s]+", "-", value).strip("-_")
-    return value + ".nt"
 
 
 @Plugin(
@@ -274,23 +249,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
-        self.temp = f"robot_{uuid4().hex}"
-
-    def create_xml_catalog_file(self, graphs: dict) -> None:
-        """Create XML catalog file"""
-        file_name = Path(self.temp) / "catalog-v001.xml"
-        catalog = Element("catalog")
-        catalog.set("prefer", "public")
-        catalog.set("xmlns", "urn:oasis:names:tc:entity:xmlns:xml:catalog")
-        for i, graph in enumerate(graphs):
-            uri = SubElement(catalog, "uri")
-            uri.set("id", f"id{i}")
-            uri.set("name", graph)
-            uri.set("uri", graphs[graph])
-        reparsed = minidom.parseString(tostring(catalog, "utf-8")).toxml()
-        with Path(file_name).open("w", encoding="utf-8") as file:
-            file.truncate(0)
-            file.write(reparsed)
+        self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
@@ -305,19 +264,6 @@ class ReasonPlugin(WorkflowPlugin):
                         f"\n<{graph}> "
                         f"<http://www.w3.org/2002/07/owl#imports> <{self.ontology_graph_iri}> ."
                     )
-
-    def get_graphs_tree(self) -> dict:
-        """Get graph import tree"""
-        graphs = {}
-        for graph_iri in (self.data_graph_iri, self.ontology_graph_iri):
-            if graph_iri not in graphs:
-                graphs[graph_iri] = convert_iri_to_filename(graph_iri)
-                tree = get_graph_import_tree(graph_iri)
-                for value in tree["tree"].values():
-                    for iri in value:
-                        if iri not in graphs:
-                            graphs[iri] = convert_iri_to_filename(iri)
-        return graphs
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
@@ -358,15 +304,6 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def send_result(self) -> None:
-        """Send result"""
-        post_streamed(
-            self.result_graph_iri,
-            str(Path(self.temp) / "result.ttl"),
-            replace=True,
-            content_type="text/turtle",
-        )
-
     def clean_up(self, graphs: dict) -> None:
         """Remove temporary files"""
         files = ["catalog-v001.xml", "result.ttl"]
@@ -384,10 +321,10 @@ class ReasonPlugin(WorkflowPlugin):
     def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:  # noqa: ARG002
         """Execute plugin"""
         setup_cmempy_user_access(context.user)
-        graphs = self.get_graphs_tree()
+        graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
         self.get_graphs(graphs, context)
-        self.create_xml_catalog_file(graphs)
+        create_xml_catalog_file(self.temp, graphs)
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
-        self.send_result()
+        send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
         self.clean_up(graphs)

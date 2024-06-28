@@ -164,8 +164,7 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="exclude_duplicate_axioms",
             label="Exclude duplicate axioms",
-            description="If set to true, axioms will not be added to the output if they exist in "
-            "an import.",
+            description="Do not add axioms to the output if they exist in an import.",
             default_value=True,
             advanced=True,
         ),

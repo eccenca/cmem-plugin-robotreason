@@ -172,7 +172,7 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="annotate_inferred_axioms",
             label="Annnotate inferred subclass axioms",
-            description="Annotate inferred subclass axioms. ⚠️ This parameter can only be set to "
+            description="Annotate inferred subclass axioms. ⚠️ This parameter can only be enabled "
             "true if the only enabled axiom generator is SubClass.",
             default_value=False,
             advanced=True,
@@ -243,8 +243,8 @@ class ReasonPlugin(WorkflowPlugin):
             errors += "No axiom generator selected. "
         if annotate_inferred_axioms and [k for k, v in self.axioms.items() if v] != ["SubClass"]:
             errors += (
-                'Parameter "Annnotate inferred subclass axioms" can only be set to true if the '
-                "only enabled axiom generator is SubClass. "
+                'Parameter "Annnotate inferred subclass axioms" can only be enabled if the only '
+                "enabled axiom generator is SubClass. "
             )
         if max_ram_percentage not in range(1, 101):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '

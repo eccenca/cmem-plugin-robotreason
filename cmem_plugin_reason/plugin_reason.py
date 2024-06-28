@@ -13,13 +13,18 @@ from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.entity import Entities
-from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
-from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
+from cmem_plugin_base.dataintegration.types import (
+    BoolParameterType,
+    StringParameterType,
+)
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 
 from cmem_plugin_reason.utils import (
+    MAX_RAM_PERCENTAGE_PARAMETER,
+    ONTOLOGY_GRAPH_IRI_PARAMETER,
+    REASONER_PARAMETER,
     REASONERS,
     ROBOT,
     create_xml_catalog_file,
@@ -37,6 +42,9 @@ from cmem_plugin_reason.utils import (
     to a specified graph. The following reasoner options are supported: ELK, Expression
     Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     parameters=[
+        REASONER_PARAMETER,
+        ONTOLOGY_GRAPH_IRI_PARAMETER,
+        MAX_RAM_PERCENTAGE_PARAMETER,
         PluginParameter(
             param_type=GraphParameterType(
                 classes=[
@@ -50,12 +58,6 @@ from cmem_plugin_reason.utils import (
             description="The IRI of the input data graph.",
         ),
         PluginParameter(
-            param_type=GraphParameterType(classes=["http://www.w3.org/2002/07/owl#Ontology"]),
-            name="ontology_graph_iri",
-            label="Ontology_graph_IRI",
-            description="The IRI of the input ontology graph.",
-        ),
-        PluginParameter(
             param_type=StringParameterType(),
             name="result_graph_iri",
             label="Result graph IRI",
@@ -63,19 +65,11 @@ from cmem_plugin_reason.utils import (
             "WARNING: existing graph will be overwritten!",
         ),
         PluginParameter(
-            param_type=ChoiceParameterType(REASONERS),
-            name="reasoner",
-            label="Reasoner",
-            description="Reasoner option.",
-            default_value="elk",
-        ),
-        PluginParameter(
             param_type=BoolParameterType(),
             name="sub_class",
             label="SubClass",
             description="",
             default_value=True,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -83,7 +77,6 @@ from cmem_plugin_reason.utils import (
             label="EquivalentClass",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -91,7 +84,6 @@ from cmem_plugin_reason.utils import (
             label="DisjointClasses",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -99,7 +91,6 @@ from cmem_plugin_reason.utils import (
             label="DataPropertyCharacteristic",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -107,7 +98,6 @@ from cmem_plugin_reason.utils import (
             label="EquivalentDataProperties",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -115,7 +105,6 @@ from cmem_plugin_reason.utils import (
             label="SubDataProperty",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -123,7 +112,6 @@ from cmem_plugin_reason.utils import (
             label="ClassAssertion",
             description="Generated Axioms",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -131,7 +119,6 @@ from cmem_plugin_reason.utils import (
             label="PropertyAssertion",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -139,7 +126,6 @@ from cmem_plugin_reason.utils import (
             label="EquivalentObjectProperty",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -147,7 +133,6 @@ from cmem_plugin_reason.utils import (
             label="InverseObjectProperties",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -155,7 +140,6 @@ from cmem_plugin_reason.utils import (
             label="ObjectPropertyCharacteristic",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -163,7 +147,6 @@ from cmem_plugin_reason.utils import (
             label="SubObjectProperty",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -171,7 +154,6 @@ from cmem_plugin_reason.utils import (
             label="ObjectPropertyRange",
             description="",
             default_value=False,
-            advanced=True,
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -179,7 +161,6 @@ from cmem_plugin_reason.utils import (
             label="ObjectPropertyDomain",
             description="",
             default_value=False,
-            advanced=True,
         ),
     ],
 )
@@ -206,6 +187,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
+        max_ram_percentage: int = 15,
     ) -> None:
         """Init"""
         self.axioms = {
@@ -242,6 +224,8 @@ class ReasonPlugin(WorkflowPlugin):
             errors += "Invalid value for parameter Reasoner. "
         if True not in self.axioms.values():
             errors += "No axiom generator selected. "
+        if max_ram_percentage not in range(1, 100):
+            errors += "Invalid value for parameter Maximum RAM Percentage. "
         if errors:
             raise ValueError(errors[:-1])
 
@@ -249,6 +233,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
+        self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
@@ -271,7 +256,8 @@ class ReasonPlugin(WorkflowPlugin):
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f'java -XX:MaxRAMPercentage=15 -jar {ROBOT} merge --input "{data_location}" '
+            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
+            f'merge --input "{data_location}" '
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '

@@ -11,6 +11,10 @@ from xml.etree.ElementTree import (
 )
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
+from cmem_plugin_base.dataintegration.description import PluginParameter
+from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
+from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
+from cmem_plugin_base.dataintegration.types import IntParameterType
 from defusedxml import minidom
 
 from . import __path__
@@ -26,6 +30,31 @@ REASONERS = OrderedDict(
         "structural": "Structural Reasoner",
         "whelk": "Whelk",
     }
+)
+
+ONTOLOGY_GRAPH_IRI_PARAMETER = PluginParameter(
+    param_type=GraphParameterType(classes=["http://www.w3.org/2002/07/owl#Ontology"]),
+    name="ontology_graph_iri",
+    label="Ontology_graph_IRI",
+    description="The IRI of the input ontology graph.",
+)
+
+REASONER_PARAMETER = PluginParameter(
+    param_type=ChoiceParameterType(REASONERS),
+    name="reasoner",
+    label="Reasoner",
+    description="Reasoner option.",
+    default_value="elk",
+)
+
+MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
+    param_type=IntParameterType(),
+    name="max_ram_percentage",
+    label="Maximum RAM Percentage",
+    description="Maximum heap size for the Java virtual machine running the reasoning "
+    "process. ⚠️ Setting the RAM usage too high may result in an out of memory error.",
+    default_value=15,
+    advanced=True,
 )
 
 

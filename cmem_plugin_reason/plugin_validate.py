@@ -19,14 +19,15 @@ from cmem_plugin_base.dataintegration.entity import (
     EntityPath,
     EntitySchema,
 )
-from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
-from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from pathvalidate import validate_filename
 
 from cmem_plugin_reason.utils import (
+    MAX_RAM_PERCENTAGE_PARAMETER,
+    ONTOLOGY_GRAPH_IRI_PARAMETER,
+    REASONER_PARAMETER,
     REASONERS,
     ROBOT,
     create_xml_catalog_file,
@@ -41,19 +42,9 @@ from cmem_plugin_reason.utils import (
     documentation="""""",
     icon=Icon(package=__package__, file_name="obofoundry.png"),
     parameters=[
-        PluginParameter(
-            param_type=GraphParameterType(classes=["http://www.w3.org/2002/07/owl#Ontology"]),
-            name="ontology_graph_iri",
-            label="Ontology_graph_IRI",
-            description="The IRI of the input ontology graph.",
-        ),
-        PluginParameter(
-            param_type=ChoiceParameterType(REASONERS),
-            name="reasoner",
-            label="Reasoner",
-            description="Reasoner option.",
-            default_value="elk",
-        ),
+        REASONER_PARAMETER,
+        ONTOLOGY_GRAPH_IRI_PARAMETER,
+        MAX_RAM_PERCENTAGE_PARAMETER,
         PluginParameter(
             param_type=BoolParameterType(),
             name="write_md",
@@ -103,6 +94,7 @@ class ValidatePlugin(WorkflowPlugin):
         write_md: bool = False,
         md_filename: str = "",
         stop_at_inconsistencies: bool = False,
+        max_ram_percentage: int = 15,
     ) -> None:
         errors = ""
         if not validators.url(ontology_graph_iri):
@@ -116,6 +108,8 @@ class ValidatePlugin(WorkflowPlugin):
                 validate_filename(md_filename)
             except:  # noqa: E722
                 errors += "Invalid filename for parameter Output filename. "
+        if max_ram_percentage not in range(1, 100):
+            errors += "Invalid value for parameter Maximum RAM Percentage. "
         if errors:
             raise ValueError(errors[:-1])
 
@@ -125,8 +119,9 @@ class ValidatePlugin(WorkflowPlugin):
         self.output_graph_iri = output_graph_iri
         self.write_md = write_md
         self.stop_at_inconsistencies = stop_at_inconsistencies
-        self.temp = f"reason_{uuid4().hex}"
         self.md_filename = md_filename if md_filename and write_md else "mdfile.md"
+        self.max_ram_percentage = max_ram_percentage
+        self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
@@ -143,7 +138,8 @@ class ValidatePlugin(WorkflowPlugin):
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
 
         cmd = (
-            f'java -XX:MaxRAMPercentage=15 -jar {ROBOT} merge --input "{data_location}" '
+            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
+            f'merge --input "{data_location}" '
             f"explain --reasoner {self.reasoner} -M inconsistency "
             f'--explanation "{self.temp}/{self.md_filename}"'
         )

@@ -162,14 +162,6 @@ from cmem_plugin_reason.utils import (
         ),
         PluginParameter(
             param_type=BoolParameterType(),
-            name="exclude_duplicate_axioms",
-            label="Exclude duplicate axioms",
-            description="Do not add axioms to the output if they exist in an import.",
-            default_value=True,
-            advanced=True,
-        ),
-        PluginParameter(
-            param_type=BoolParameterType(),
             name="annotate_inferred_axioms",
             label="Annnotate inferred subclass axioms",
             description="Annotate inferred subclass axioms. ⚠️ This parameter can only be enabled "
@@ -202,7 +194,6 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
-        exclude_duplicate_axioms: bool = True,
         annotate_inferred_axioms: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
@@ -255,7 +246,6 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
-        self.exclude_duplicate_axioms = str(exclude_duplicate_axioms).lower()
         self.annotate_inferred_axioms = str(annotate_inferred_axioms).lower()
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
@@ -287,7 +277,7 @@ class ReasonPlugin(WorkflowPlugin):
             f'--axiom-generators "{axioms}" '
             f"--annotate-inferred-axioms {self.annotate_inferred_axioms} "
             f"--include-indirect true "
-            f"--exclude-duplicate-axioms {self.exclude_duplicate_axioms} "
+            f"--exclude-duplicate-axioms true "
             f"--exclude-owl-thing true "
             f"--exclude-tautologies all "
             f"--exclude-external-entities "

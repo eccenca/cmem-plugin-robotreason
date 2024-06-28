@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
 
-## [1.0.0alpha2] 2024-06-28
+## [1.0.0alpha3] 2024-06-28
 
 ### Added
 
@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Changed
 
 - axiom generators are now not advanced parameters
+
+## [1.0.0alpha2] (skipped)
 
 ## [1.0.0alpha1] 2024-06-27
 

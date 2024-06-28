@@ -174,7 +174,7 @@ from cmem_plugin_reason.utils import (
             name="annotate_inferred_axioms",
             label="Annnotate inferred subclass axioms",
             description="Annotate inferred subclass axioms. ⚠️ This parameter can only be enabled "
-            "true if the only enabled axiom generator is SubClass.",
+            "if the only enabled axiom generator is SubClass.",
             default_value=False,
             advanced=True,
         ),

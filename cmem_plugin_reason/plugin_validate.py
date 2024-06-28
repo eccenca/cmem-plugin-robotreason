@@ -25,6 +25,7 @@ from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from pathvalidate import validate_filename
 
 from cmem_plugin_reason.utils import (
+    MAX_RAM_PERCENTAGE_DEFAULT,
     MAX_RAM_PERCENTAGE_PARAMETER,
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
@@ -63,7 +64,8 @@ from cmem_plugin_reason.utils import (
             param_type=StringParameterType(),
             name="output_graph_iri",
             label="Output graph IRI",
-            description="The IRI of the output graph for the inconsistency validation.",
+            description="The IRI of the output graph for the inconsistency validation. ⚠️ Existing "
+            "graph will be overwritten.",
         ),
         PluginParameter(
             param_type=StringParameterType(),
@@ -94,7 +96,7 @@ class ValidatePlugin(WorkflowPlugin):
         write_md: bool = False,
         md_filename: str = "",
         stop_at_inconsistencies: bool = False,
-        max_ram_percentage: int = 15,
+        max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         errors = ""
         if not validators.url(ontology_graph_iri):

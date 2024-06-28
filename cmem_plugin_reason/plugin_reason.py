@@ -19,6 +19,7 @@ from cmem_plugin_base.dataintegration.types import BoolParameterType, StringPara
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 
 from cmem_plugin_reason.utils import (
+    MAX_RAM_PERCENTAGE_DEFAULT,
     MAX_RAM_PERCENTAGE_PARAMETER,
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
@@ -59,7 +60,7 @@ from cmem_plugin_reason.utils import (
             name="result_graph_iri",
             label="Result graph IRI",
             description="The IRI of the output graph for the reasoning result. ⚠️ Existing graph "
-            "will be overwritten!",
+            "will be overwritten.",
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -204,7 +205,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_object_property: bool = False,
         exclude_duplicate_axioms: bool = True,
         annotate_inferred_axioms: bool = False,
-        max_ram_percentage: int = 15,
+        max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         """Init"""
         self.axioms = {

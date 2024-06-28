@@ -4,11 +4,7 @@ import re
 import unicodedata
 from collections import OrderedDict
 from pathlib import Path
-from xml.etree.ElementTree import (
-    Element,
-    SubElement,
-    tostring,
-)
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
 from cmem_plugin_base.dataintegration.description import PluginParameter
@@ -32,6 +28,8 @@ REASONERS = OrderedDict(
     }
 )
 
+MAX_RAM_PERCENTAGE_DEFAULT = 20
+
 ONTOLOGY_GRAPH_IRI_PARAMETER = PluginParameter(
     param_type=GraphParameterType(classes=["http://www.w3.org/2002/07/owl#Ontology"]),
     name="ontology_graph_iri",
@@ -51,9 +49,9 @@ MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
     param_type=IntParameterType(),
     name="max_ram_percentage",
     label="Maximum RAM Percentage",
-    description="""Maximum heap size for the Java virtual machine running the reasoning process.
-    ⚠️ Setting the percentage too high may result in an out of memory error.""",
-    default_value=15,
+    description="Maximum heap size for the Java virtual machine in the DI container running the "
+    "reasoning process. ⚠️ Setting the percentage too high may result in an out of memory error.",
+    default_value=MAX_RAM_PERCENTAGE_DEFAULT,
     advanced=True,
 )
 

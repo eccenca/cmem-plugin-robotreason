@@ -1,4 +1,4 @@
-"""Reasoning with robot plugin module"""
+"""Reasoning workflow plugin module"""
 
 import shlex
 from collections.abc import Sequence
@@ -15,10 +15,7 @@ from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginPar
 from cmem_plugin_base.dataintegration.entity import Entities
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
-from cmem_plugin_base.dataintegration.types import (
-    BoolParameterType,
-    StringParameterType,
-)
+from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 
 from cmem_plugin_reason.utils import (
@@ -61,8 +58,8 @@ from cmem_plugin_reason.utils import (
             param_type=StringParameterType(),
             name="result_graph_iri",
             label="Result graph IRI",
-            description="The IRI of the output graph for the reasoning result. "
-            "WARNING: existing graph will be overwritten!",
+            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graph "
+            "will be overwritten!",
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -162,6 +159,24 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="exclude_duplicate_axioms",
+            label="Exclude duplicate axioms",
+            description="If set to true, axioms will not be added to the output if they exist in "
+            "an import.",
+            default_value=True,
+            advanced=True,
+        ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="annotate_inferred_axioms",
+            label="Annnotate inferred subclass axioms",
+            description="Annotate inferred subclass axioms. ⚠️ This parameter can only be set to "
+            "true if the only enabled axiom generator is SubClass.",
+            default_value=False,
+            advanced=True,
+        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
@@ -187,6 +202,8 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
+        exclude_duplicate_axioms: bool = True,
+        annotate_inferred_axioms: bool = False,
         max_ram_percentage: int = 15,
     ) -> None:
         """Init"""
@@ -216,16 +233,21 @@ class ReasonPlugin(WorkflowPlugin):
         not_iri = sorted([k for k, v in iris.items() if not validators.url(v)])
         if not_iri:
             errors += f"Invalid IRI for parameters: {', '.join(not_iri)}. "
-        if result_graph_iri == data_graph_iri:
+        if result_graph_iri and result_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
-        if result_graph_iri == ontology_graph_iri:
+        if result_graph_iri and result_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
         if reasoner not in REASONERS:
-            errors += "Invalid value for parameter Reasoner. "
+            errors += 'Invalid value for parameter "Reasoner". '
         if True not in self.axioms.values():
             errors += "No axiom generator selected. "
-        if max_ram_percentage not in range(1, 100):
-            errors += "Invalid value for parameter Maximum RAM Percentage. "
+        if annotate_inferred_axioms and [k for k, v in self.axioms.items() if v] != ["SubClass"]:
+            errors += (
+                'Parameter "Annnotate inferred subclass axioms" can only be set to true if the '
+                "only enabled axiom generator is SubClass. "
+            )
+        if max_ram_percentage not in range(1, 101):
+            errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
 
@@ -233,6 +255,8 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
+        self.exclude_duplicate_axioms = str(exclude_duplicate_axioms).lower()
+        self.annotate_inferred_axioms = str(annotate_inferred_axioms).lower()
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 
@@ -261,8 +285,9 @@ class ReasonPlugin(WorkflowPlugin):
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
+            f"--annotate-inferred-axioms {self.annotate_inferred_axioms} "
             f"--include-indirect true "
-            f"--exclude-duplicate-axioms true "
+            f"--exclude-duplicate-axioms {self.exclude_duplicate_axioms} "
             f"--exclude-owl-thing true "
             f"--exclude-tautologies all "
             f"--exclude-external-entities "

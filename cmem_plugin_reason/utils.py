@@ -51,8 +51,8 @@ MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
     param_type=IntParameterType(),
     name="max_ram_percentage",
     label="Maximum RAM Percentage",
-    description="Maximum heap size for the Java virtual machine running the reasoning "
-    "process. ⚠️ Setting the RAM usage too high may result in an out of memory error.",
+    description="""Maximum heap size for the Java virtual machine running the reasoning process.
+    ⚠️ Setting the percentage too high may result in an out of memory error.""",
     default_value=15,
     advanced=True,
 )

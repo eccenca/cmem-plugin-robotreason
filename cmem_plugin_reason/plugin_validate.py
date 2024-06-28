@@ -1,4 +1,4 @@
-"""Random values workflow plugin module"""
+"""Ontology consistency validation workflow plugin module"""
 
 import shlex
 from collections.abc import Sequence
@@ -56,7 +56,7 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="produce_graph",
             label="Produce output graph",
-            description="Produce graph with explanation.",
+            description="Produce explanation graph.",
             default_value=False,
         ),
         PluginParameter(

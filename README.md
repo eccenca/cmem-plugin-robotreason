@@ -6,7 +6,7 @@ Reasoning with ROBOT
 
 This eccenca Corporate Memory workflow plugin performs reasoning using [ROBOT](http://robot.obolibrary.org/). It takes an OWL ontology and a data graph as inputs and writes the reasoning result to a specified graph.
 
-[![eccenca Corporate Memory](https://img.shields.io/badge/eccenca-Corporate%20Memory-orange)](https://documentation.eccenca.com) [![workflow](https://github.com/eccenca/cmem-plugin-pyshacl/actions/workflows/check.yml/badge.svg)](https://github.com/eccenca/cmem-plugin-pyshacl/actions)  [![license](https://img.shields.io/pypi/l/cmem-plugin-pyshacl)](https://pypi.org/project/cmem-plugin-pyshacl)
+[![eccenca Corporate Memory](https://img.shields.io/badge/eccenca-Corporate%20Memory-orange)](https://documentation.eccenca.com) [![workflow](https://github.com/eccenca/cmem-plugin-pyshacl/actions/workflows/check.yml/badge.svg)](https://github.com/eccenca/cmem-plugin-pyshacl/actions) [![pypi version](https://img.shields.io/pypi/v/cmem-plugin-reason)](https://pypi.org/project/cmem-plugin-reason/) [![license](https://img.shields.io/pypi/l/cmem-plugin-reason)](https://pypi.org/project/cmem-plugin-reasom)
 
 ROBOT is published under the [BSD 3-Clause "New" or "Revised" License](https://choosealicense.com/licenses/bsd-3-clause/).
 Copyright © 2015, the Authors

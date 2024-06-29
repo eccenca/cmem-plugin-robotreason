@@ -110,7 +110,7 @@ class ValidatePlugin(WorkflowPlugin):
                 validate_filename(md_filename)
             except:  # noqa: E722
                 errors += "Invalid filename for parameter Output filename. "
-        if max_ram_percentage not in range(1, 100):
+        if max_ram_percentage not in range(1, 101):
             errors += "Invalid value for parameter Maximum RAM Percentage. "
         if errors:
             raise ValueError(errors[:-1])

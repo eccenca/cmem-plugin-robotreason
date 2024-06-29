@@ -22,7 +22,7 @@ from cmem_plugin_base.dataintegration.entity import (
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
-from pathvalidate import validate_filename
+from pathvalidate import is_valid_filename
 
 from cmem_plugin_reason.utils import (
     MAX_RAM_PERCENTAGE_DEFAULT,
@@ -85,7 +85,7 @@ from cmem_plugin_reason.utils import (
     ],
 )
 class ValidatePlugin(WorkflowPlugin):
-    """Example Workflow Plugin: Random Values"""
+    """Validate plugin"""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -100,18 +100,17 @@ class ValidatePlugin(WorkflowPlugin):
     ) -> None:
         errors = ""
         if not validators.url(ontology_graph_iri):
-            errors += "Invalid IRI for parameter Ontology graph IRI. "
-        if reasoner not in REASONERS:
-            errors += "Invalid value for parameter Reasoner. "
+            errors += 'Invalid IRI for parameter "Ontology graph IRI." '
         if produce_graph and not validators.url(output_graph_iri):
-            errors += "Invalid IRI for parameter Output graph IRI. "
-        if write_md:
-            try:
-                validate_filename(md_filename)
-            except:  # noqa: E722
-                errors += "Invalid filename for parameter Output filename. "
+            errors += 'Invalid IRI for parameter "Output graph IRI". '
+        if produce_graph and output_graph_iri == ontology_graph_iri:
+            errors += "Output graph IRI cannot be the same as the Ontology graph IRI. "
+        if reasoner not in REASONERS:
+            errors += 'Invalid value for parameter "Reasoner". '
+        if write_md and not is_valid_filename(md_filename):
+            errors += 'Invalid filename for parameter "Output filename". '
         if max_ram_percentage not in range(1, 101):
-            errors += "Invalid value for parameter Maximum RAM Percentage. "
+            errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
 
@@ -121,7 +120,7 @@ class ValidatePlugin(WorkflowPlugin):
         self.output_graph_iri = output_graph_iri
         self.write_md = write_md
         self.stop_at_inconsistencies = stop_at_inconsistencies
-        self.md_filename = md_filename if md_filename and write_md else "mdfile.md"
+        self.md_filename = md_filename if write_md else "mdfile.md"
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 

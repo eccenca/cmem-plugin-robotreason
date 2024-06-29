@@ -172,9 +172,9 @@ from cmem_plugin_reason.utils import (
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
-    """Robot reasoning plugin"""
+    """Reason plugin"""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, C901
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
@@ -197,7 +197,6 @@ class ReasonPlugin(WorkflowPlugin):
         annotate_inferred_axioms: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
-        """Init"""
         self.axioms = {
             "SubClass": sub_class,
             "EquivalentClass": equivalent_class,
@@ -216,14 +215,12 @@ class ReasonPlugin(WorkflowPlugin):
         }
 
         errors = ""
-        iris = {
-            "Data graph IRI": data_graph_iri,
-            "Ontology graph IRI": ontology_graph_iri,
-            "Result graph IRI": result_graph_iri,
-        }
-        not_iri = sorted([k for k, v in iris.items() if not validators.url(v)])
-        if not_iri:
-            errors += f"Invalid IRI for parameters: {', '.join(not_iri)}. "
+        if not validators.url(data_graph_iri):
+            errors += 'Invalid IRI for parameter "Data graph IRI". '
+        if not validators.url(ontology_graph_iri):
+            errors += 'Invalid IRI for parameter "Ontology graph IRI". '
+        if not validators.url(result_graph_iri):
+            errors += 'Invalid IRI for parameter "Result graph IRI". '
         if result_graph_iri and result_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
         if result_graph_iri and result_graph_iri == ontology_graph_iri:
@@ -241,7 +238,6 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
-
         self.data_graph_iri = data_graph_iri
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri

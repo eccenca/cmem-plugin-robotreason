@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - valid range of "Maximum RAM Percentage" parameter in Validate plugin (1-100)
 
+### Change
+
+- completed validation for IRI parameters
+
 ## [1.0.0alpha3] 2024-06-28
 
 ### Added

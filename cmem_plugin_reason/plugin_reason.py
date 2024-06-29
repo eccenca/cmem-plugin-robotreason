@@ -1,7 +1,6 @@
 """Reasoning workflow plugin module"""
 
 import shlex
-from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import run
@@ -12,7 +11,6 @@ import validators.url
 from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
-from cmem_plugin_base.dataintegration.entity import Entities
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
@@ -315,7 +313,7 @@ class ReasonPlugin(WorkflowPlugin):
         except (OSError, FileNotFoundError) as err:
             self.log.warning(f"Cannot remove directory {self.temp} ({err})")
 
-    def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:  # noqa: ARG002
+    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
         """Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))

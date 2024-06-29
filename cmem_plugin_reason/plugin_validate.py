@@ -1,7 +1,6 @@
 """Ontology consistency validation workflow plugin module"""
 
 import shlex
-from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import run
@@ -189,11 +188,7 @@ class ValidatePlugin(WorkflowPlugin):
         except (OSError, FileNotFoundError) as err:
             self.log.warning(f"Cannot remove directory {self.temp} ({err})")
 
-    def execute(
-        self,
-        inputs: Sequence[Entities],  # noqa: ARG002
-        context: ExecutionContext,
-    ) -> Entities | None:
+    def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.ontology_graph_iri,))

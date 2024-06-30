@@ -25,6 +25,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    remove_temp,
     send_result,
 )
 
@@ -57,7 +58,7 @@ from cmem_plugin_reason.utils import (
             param_type=StringParameterType(),
             name="result_graph_iri",
             label="Result graph IRI",
-            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graph "
+            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
             "will be overwritten.",
         ),
         PluginParameter(
@@ -162,10 +163,9 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="annotate_inferred_axioms",
             label="Annnotate inferred subclass axioms",
-            description="Annotate inferred subclass axioms. ⚠️ This parameter can only be enabled "
-            "if the only enabled axiom generator is SubClass.",
+            description="⚠️ This parameter can only be enabled if the only enabled axiom generator "
+            "is SubClass.",
             default_value=False,
-            advanced=True,
         ),
     ],
 )
@@ -211,7 +211,6 @@ class ReasonPlugin(WorkflowPlugin):
             "ObjectPropertyRange": object_property_range,
             "ObjectPropertyDomain": object_property_domain,
         }
-
         errors = ""
         if not validators.url(data_graph_iri):
             errors += 'Invalid IRI for parameter "Data graph IRI". '
@@ -299,20 +298,6 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def clean_up(self, graphs: dict) -> None:
-        """Remove temporary files"""
-        files = ["catalog-v001.xml", "result.ttl"]
-        files += list(graphs.values())
-        for file in files:
-            try:
-                (Path(self.temp) / file).unlink()
-            except (OSError, FileNotFoundError) as err:
-                self.log.warning(f"Cannot remove file {file} ({err})")
-        try:
-            Path(self.temp).rmdir()
-        except (OSError, FileNotFoundError) as err:
-            self.log.warning(f"Cannot remove directory {self.temp} ({err})")
-
     def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
         """Execute plugin"""
         setup_cmempy_user_access(context.user)
@@ -322,4 +307,4 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
-        self.clean_up(graphs)
+        remove_temp(self, ["catalog-v001.xml", "result.ttl", *graphs.values()])

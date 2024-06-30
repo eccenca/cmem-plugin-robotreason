@@ -32,6 +32,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    remove_temp,
     send_result,
 )
 
@@ -112,7 +113,6 @@ class ValidatePlugin(WorkflowPlugin):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
-
         self.ontology_graph_iri = ontology_graph_iri
         self.reasoner = reasoner
         self.produce_graph = produce_graph
@@ -174,20 +174,6 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
-    def clean_up(self, graphs: dict) -> None:
-        """Remove temporary files"""
-        files = ["catalog-v001.xml", "output.ttl", self.md_filename]
-        files += list(graphs.values())
-        for file in files:
-            try:
-                (Path(self.temp) / file).unlink()
-            except (OSError, FileNotFoundError) as err:
-                self.log.warning(f"Cannot remove file {file} ({err})")
-        try:
-            Path(self.temp).rmdir()
-        except (OSError, FileNotFoundError) as err:
-            self.log.warning(f"Cannot remove directory {self.temp} ({err})")
-
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
@@ -195,10 +181,13 @@ class ValidatePlugin(WorkflowPlugin):
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
         self.validate(graphs)
+        files = ["catalog-v001.xml", self.md_filename, *graphs.values()]
+        if self.produce_graph:
+            files.append("output.ttl")
 
         text = (Path(self.temp) / self.md_filename).read_text()
         if text == "No explanations found.":
-            self.clean_up(graphs)
+            remove_temp(self, files)
             return None
 
         if self.produce_graph:
@@ -209,7 +198,7 @@ class ValidatePlugin(WorkflowPlugin):
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
 
-        self.clean_up(graphs)
+        remove_temp(self, files)
 
         if self.stop_at_inconsistencies:
             raise RuntimeError("Inconsistencies found in Ontology.")

@@ -1,4 +1,4 @@
-"""Common functions"""
+"""Common constants and functions"""
 
 import re
 import unicodedata
@@ -10,6 +10,7 @@ from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
 from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
+from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import IntParameterType
 from defusedxml import minidom
 
@@ -105,3 +106,16 @@ def send_result(iri: str, filepath: Path) -> None:
         replace=True,
         content_type="text/turtle",
     )
+
+
+def remove_temp(plugin: WorkflowPlugin, files: list) -> None:
+    """Remove temproray files"""
+    for file in files:
+        try:
+            (Path(plugin.temp) / file).unlink()
+        except (OSError, FileNotFoundError) as err:
+            plugin.log.warning(f"Cannot remove file {file} ({err})")
+    try:
+        Path(plugin.temp).rmdir()
+    except (OSError, FileNotFoundError) as err:
+        plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")

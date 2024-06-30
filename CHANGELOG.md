@@ -10,9 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - valid range of "Maximum RAM Percentage" parameter in Validate plugin (1-100)
 
-### Change
+### Changed
 
 - completed validation for IRI parameters
+- "Annnotate inferred subclass axioms" is now not an advanced parameter
 
 ## [1.0.0alpha3] 2024-06-28
 

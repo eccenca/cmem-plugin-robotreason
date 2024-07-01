@@ -1,4 +1,4 @@
-"""Common functions"""
+"""Common constants and functions"""
 
 import re
 import unicodedata
@@ -10,6 +10,7 @@ from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
 from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
+from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import IntParameterType
 from defusedxml import minidom
 
@@ -66,9 +67,9 @@ def convert_iri_to_filename(value: str) -> str:
     return value + ".nt"
 
 
-def create_xml_catalog_file(temp: str, graphs: dict) -> None:
+def create_xml_catalog_file(dir_: str, graphs: dict) -> None:
     """Create XML catalog file"""
-    file_name = Path(temp) / "catalog-v001.xml"
+    file_name = Path(dir_) / "catalog-v001.xml"
     catalog = Element("catalog")
     catalog.set("prefer", "public")
     catalog.set("xmlns", "urn:oasis:names:tc:entity:xmlns:xml:catalog")
@@ -105,3 +106,16 @@ def send_result(iri: str, filepath: Path) -> None:
         replace=True,
         content_type="text/turtle",
     )
+
+
+def remove_temp(plugin: WorkflowPlugin, files: list) -> None:
+    """Remove temproray files"""
+    for file in files:
+        try:
+            (Path(plugin.temp) / file).unlink()
+        except (OSError, FileNotFoundError) as err:
+            plugin.log.warning(f"Cannot remove file {file} ({err})")
+    try:
+        Path(plugin.temp).rmdir()
+    except (OSError, FileNotFoundError) as err:
+        plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")

@@ -2,9 +2,7 @@
 
 # cmem-plugin-reason
 
-Reasoning with ROBOT
-
-This eccenca Corporate Memory workflow plugin performs reasoning using [ROBOT](http://robot.obolibrary.org/). It takes an OWL ontology and a data graph as inputs and writes the reasoning result to a specified graph.
+This [eccenca](https://eccenca.com) [Corporate Memory](https://documentation.eccenca.com) workflow plugin bundle contains plugins performing reasoning (Reason) and ontology consistency checking (Validate) using [ROBOT](http://robot.obolibrary.org/).
 
 [![eccenca Corporate Memory](https://img.shields.io/badge/eccenca-Corporate%20Memory-orange)](https://documentation.eccenca.com) [![workflow](https://github.com/eccenca/cmem-plugin-pyshacl/actions/workflows/check.yml/badge.svg)](https://github.com/eccenca/cmem-plugin-pyshacl/actions) [![pypi version](https://img.shields.io/pypi/v/cmem-plugin-reason)](https://pypi.org/project/cmem-plugin-reason/) [![license](https://img.shields.io/pypi/l/cmem-plugin-reason)](https://pypi.org/project/cmem-plugin-reasom)
 
@@ -29,6 +27,7 @@ Alternatively, the _build_ and _installation_ process can be initiated with the 
 ➜ task deploy
 ```
 
+# Reason
 ## Options
 
 ### Data graph IRI
@@ -45,7 +44,6 @@ The IRI of the input ontology graph. The graph IRI is selected from a list of gr
 The IRI of the output graph for the reasoning result.
 
 :warning: Existing graphs will be overwritten.
-
 
 ### Reasoner
 
@@ -84,3 +82,54 @@ parameters to include inferred axiom generators:
 - ObjectPropertyRange
 - ObjectPropertyDomain
 
+### Maximum RAM Percentage
+
+Maximum heap size for the Java virtual machine in the DI container running the reasoning process.
+
+:warning: Setting the percentage too high may result in an out of memory error.
+
+# Validate
+
+In case ontology inconsistencies are found, the plugin outputs the explanation as text in Markdown format using the path "text".
+
+## Options
+
+### Ontology graph IRI
+
+The IRI of the input ontology graph. The graph IRI is selected from a list of graphs of type`owl:Ontology`.
+
+### Reasoner
+
+The following reasoner options are supported: 
+- [ELK](https://code.google.com/p/elk-reasoner/) (elk)
+- [Expression Materializing Reasoner](http://static.javadoc.io/org.geneontology/expression-materializing-reasoner/0.1.3/org/geneontology/reasoner/ExpressionMaterializingReasoner.html) (emr)
+- [HermiT](http://www.hermit-reasoner.com/) (hermit)
+- [JFact](http://jfact.sourceforge.net/) (jfact)
+- [Structural Reasoner](http://owlcs.github.io/owlapi/apidocs_4/org/semanticweb/owlapi/reasoner/structural/StructuralReasoner.html) (structural)
+- [Whelk](https://github.com/balhoff/whelk) (whelk)
+
+### Produce output graph
+
+If enabled, an explanation graph is created.
+
+### Output graph IRI
+
+The IRI of the output graph for the reasoning result.
+
+:warning: Existing graphs will be overwritten.
+
+### Write markdown explanation file
+
+If enabled, an explanation markdown file is written to the project.
+
+:warning: Existing files will be overwritten.
+
+### Stop at inconsistencies
+
+Raise an error if inconsistencies are found. If enabled, the plugin does not output entities.
+
+### Maximum RAM Percentage
+
+Maximum heap size for the Java virtual machine in the DI container running the reasoning process.
+
+:warning: Setting the percentage too high may result in an out of memory error.

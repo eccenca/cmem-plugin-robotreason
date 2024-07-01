@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+## [Unreleased]
+
+### Fixed
+
+- valid range of "Maximum RAM Percentage" parameter in Validate plugin (1-100)
+
+### Changed
+
+- complete validation for IRI parameters
+- Remove "Annnotate inferred subclass axioms" parameter
 
 ## [1.0.0alpha3] 2024-06-28
 

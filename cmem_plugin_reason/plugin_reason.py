@@ -1,7 +1,6 @@
 """Reasoning workflow plugin module"""
 
 import shlex
-from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import run
@@ -12,7 +11,6 @@ import validators.url
 from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
-from cmem_plugin_base.dataintegration.entity import Entities
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
@@ -27,6 +25,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    remove_temp,
     send_result,
 )
 
@@ -59,7 +58,7 @@ from cmem_plugin_reason.utils import (
             param_type=StringParameterType(),
             name="result_graph_iri",
             label="Result graph IRI",
-            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graph "
+            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
             "will be overwritten.",
         ),
         PluginParameter(
@@ -160,19 +159,10 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
-        PluginParameter(
-            param_type=BoolParameterType(),
-            name="annotate_inferred_axioms",
-            label="Annnotate inferred subclass axioms",
-            description="Annotate inferred subclass axioms. ⚠️ This parameter can only be enabled "
-            "if the only enabled axiom generator is SubClass.",
-            default_value=False,
-            advanced=True,
-        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
-    """Robot reasoning plugin"""
+    """Reason plugin"""
 
     def __init__(  # noqa: PLR0913
         self,
@@ -194,10 +184,8 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
-        annotate_inferred_axioms: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
-        """Init"""
         self.axioms = {
             "SubClass": sub_class,
             "EquivalentClass": equivalent_class,
@@ -214,16 +202,13 @@ class ReasonPlugin(WorkflowPlugin):
             "ObjectPropertyRange": object_property_range,
             "ObjectPropertyDomain": object_property_domain,
         }
-
         errors = ""
-        iris = {
-            "Data graph IRI": data_graph_iri,
-            "Ontology graph IRI": ontology_graph_iri,
-            "Result graph IRI": result_graph_iri,
-        }
-        not_iri = sorted([k for k, v in iris.items() if not validators.url(v)])
-        if not_iri:
-            errors += f"Invalid IRI for parameters: {', '.join(not_iri)}. "
+        if not validators.url(data_graph_iri):
+            errors += 'Invalid IRI for parameter "Data graph IRI". '
+        if not validators.url(ontology_graph_iri):
+            errors += 'Invalid IRI for parameter "Ontology graph IRI". '
+        if not validators.url(result_graph_iri):
+            errors += 'Invalid IRI for parameter "Result graph IRI". '
         if result_graph_iri and result_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
         if result_graph_iri and result_graph_iri == ontology_graph_iri:
@@ -232,21 +217,14 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid value for parameter "Reasoner". '
         if True not in self.axioms.values():
             errors += "No axiom generator selected. "
-        if annotate_inferred_axioms and [k for k, v in self.axioms.items() if v] != ["SubClass"]:
-            errors += (
-                'Parameter "Annnotate inferred subclass axioms" can only be enabled if the only '
-                "enabled axiom generator is SubClass. "
-            )
         if max_ram_percentage not in range(1, 101):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
-
         self.data_graph_iri = data_graph_iri
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
-        self.annotate_inferred_axioms = str(annotate_inferred_axioms).lower()
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 
@@ -275,7 +253,6 @@ class ReasonPlugin(WorkflowPlugin):
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
-            f"--annotate-inferred-axioms {self.annotate_inferred_axioms} "
             f"--include-indirect true "
             f"--exclude-duplicate-axioms true "
             f"--exclude-owl-thing true "
@@ -305,21 +282,7 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def clean_up(self, graphs: dict) -> None:
-        """Remove temporary files"""
-        files = ["catalog-v001.xml", "result.ttl"]
-        files += list(graphs.values())
-        for file in files:
-            try:
-                (Path(self.temp) / file).unlink()
-            except (OSError, FileNotFoundError) as err:
-                self.log.warning(f"Cannot remove file {file} ({err})")
-        try:
-            Path(self.temp).rmdir()
-        except (OSError, FileNotFoundError) as err:
-            self.log.warning(f"Cannot remove directory {self.temp} ({err})")
-
-    def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:  # noqa: ARG002
+    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
         """Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
@@ -328,4 +291,4 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
-        self.clean_up(graphs)
+        remove_temp(self, ["catalog-v001.xml", "result.ttl", *graphs.values()])

@@ -184,11 +184,8 @@ class ValidatePlugin(WorkflowPlugin):
         if self.produce_graph:
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
-            post_provenance(
-                self.output_graph_iri,
-                "cmem_plugin_reason-plugin_validate-ValidatePlugin",
-                context,
-            )
+            setup_cmempy_user_access(context.user)
+            post_provenance(self, context)
 
         if self.write_md:
             setup_cmempy_user_access(context.user)

@@ -57,7 +57,7 @@ from cmem_plugin_reason.utils import (
         ),
         PluginParameter(
             param_type=StringParameterType(),
-            name="result_graph_iri",
+            name="output_graph_iri",
             label="Result graph IRI",
             description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
             "will be overwritten.",
@@ -169,7 +169,7 @@ class ReasonPlugin(WorkflowPlugin):
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
-        result_graph_iri: str = "",
+        output_graph_iri: str = "",
         reasoner: str = "elk",
         class_assertion: bool = False,
         data_property_characteristic: bool = False,
@@ -208,11 +208,11 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid IRI for parameter "Data graph IRI". '
         if not validators.url(ontology_graph_iri):
             errors += 'Invalid IRI for parameter "Ontology graph IRI". '
-        if not validators.url(result_graph_iri):
+        if not validators.url(output_graph_iri):
             errors += 'Invalid IRI for parameter "Result graph IRI". '
-        if result_graph_iri and result_graph_iri == data_graph_iri:
+        if output_graph_iri and output_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
-        if result_graph_iri and result_graph_iri == ontology_graph_iri:
+        if output_graph_iri and output_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
         if reasoner not in REASONERS:
             errors += 'Invalid value for parameter "Reasoner". '
@@ -224,7 +224,7 @@ class ReasonPlugin(WorkflowPlugin):
             raise ValueError(errors[:-1])
         self.data_graph_iri = data_graph_iri
         self.ontology_graph_iri = ontology_graph_iri
-        self.result_graph_iri = result_graph_iri
+        self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
@@ -261,7 +261,7 @@ class ReasonPlugin(WorkflowPlugin):
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
             f'unmerge --input "{data_location}" '
-            f'annotate --ontology-iri "{self.result_graph_iri}" '
+            f'annotate --ontology-iri "{self.output_graph_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '
             f"--language-annotation rdfs:comment "
@@ -289,10 +289,6 @@ class ReasonPlugin(WorkflowPlugin):
         create_xml_catalog_file(self.temp, graphs)
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
-        send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
-        post_provenance(
-            self.result_graph_iri,
-            "cmem_plugin_reason-plugin_reason-ReasonPlugin",
-            context,
-        )
+        send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
+        post_provenance(self, context)
         remove_temp(self)

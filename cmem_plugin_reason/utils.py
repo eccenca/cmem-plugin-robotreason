@@ -1,5 +1,6 @@
 """Common constants and functions"""
 
+import json
 import re
 import unicodedata
 from collections import OrderedDict
@@ -8,7 +9,8 @@ from shutil import rmtree
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
-from cmem.cmempy.dp.proxy.update import post
+from cmem.cmempy.dp.proxy.sparql import post as post_select
+from cmem.cmempy.dp.proxy.update import post as post_update
 from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
@@ -118,25 +120,61 @@ def remove_temp(plugin: WorkflowPlugin) -> None:
         plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
 
 
-def post_provenance(graph: str, plugin_id: str, context: ExecutionContext) -> None:
+def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     """Insert provenance"""
     plugin_iri = (
         f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
     )
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
-    query = f"""
-    INSERT {{
-        GRAPH <{graph}> {{
-            <{graph}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{plugin_iri}> .
-            <{plugin_iri}> a <https://vocab.eccenca.com/di/functions/Plugin_{plugin_id}> .
-            <{plugin_iri}> ?p ?o .
-        }}
-    }}
-    WHERE {{
+
+    type_query = f"""
+    SELECT ?parameter ?type {{
         GRAPH <{project_graph}> {{
-            <{plugin_iri}> ?p ?o .
-            FILTER(STRSTARTS(STR(?p), "https://vocab.eccenca.com/di/functions/param_"))
+            <{plugin_iri}> a ?type .
+            FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
         }}
     }}"""
+    result = json.loads(post_select(query=type_query))
 
-    post(query=query)
+    try:
+        plugin_type = result["results"]["bindings"][0]["type"]["value"]
+    except IndexError:
+        plugin.log.warning("Could not add provenance data to output file")
+        return
+
+    plugin.log.info(str(plugin_type))
+
+    parameter_query = f"""
+        SELECT ?parameter ?type {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> ?parameter ?o .
+                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
+            }}
+        }}"""
+
+    param_split = (
+        plugin_type.replace(
+            "https://vocab.eccenca.com/di/functions/Plugin_",
+            "https://vocab.eccenca.com/di/functions/param_",
+        )
+        + "_"
+    )
+
+    result = json.loads(post_select(query=parameter_query))
+    param_sparql = f"<{plugin_iri}> a <{plugin_type}> . "
+    for binding in result["results"]["bindings"]:
+        param_iri = binding["parameter"]["value"]
+        param_val = plugin.__dict__[binding["parameter"]["value"].split(param_split)[1]]
+        param_sparql += f'\n<{plugin_iri}> <{param_iri}> "{param_val}" . '
+
+    insert_query = f"""
+        INSERT DATA {{
+          GRAPH <{plugin.output_graph_iri}> {{
+            <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{plugin_iri}> .
+            {param_sparql}
+          }}
+        }}
+        """
+
+    plugin.log.info(insert_query)
+    post_update(query=insert_query)

@@ -71,7 +71,7 @@ def tests(_setup: None) -> None:  # noqa: C901
         ReasonPlugin(
             data_graph_iri=REASON_DATA_GRAPH_IRI,
             ontology_graph_iri=REASON_ONTOLOGY_GRAPH_IRI,
-            result_graph_iri=REASON_RESULT_GRAPH_IRI,
+            output_graph_iri=REASON_RESULT_GRAPH_IRI,
             reasoner=reasoner,
             sub_class=False,
             class_assertion=True,

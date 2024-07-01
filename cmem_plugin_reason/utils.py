@@ -4,6 +4,7 @@ import re
 import unicodedata
 from collections import OrderedDict
 from pathlib import Path
+from shutil import rmtree
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
@@ -108,14 +109,9 @@ def send_result(iri: str, filepath: Path) -> None:
     )
 
 
-def remove_temp(plugin: WorkflowPlugin, files: list) -> None:
-    """Remove temproray files"""
-    for file in files:
-        try:
-            (Path(plugin.temp) / file).unlink()
-        except (OSError, FileNotFoundError) as err:
-            plugin.log.warning(f"Cannot remove file {file} ({err})")
+def remove_temp(plugin: WorkflowPlugin) -> None:
+    """Remove temporary files"""
     try:
-        Path(plugin.temp).rmdir()
+        rmtree(plugin.temp)
     except (OSError, FileNotFoundError) as err:
         plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")

@@ -36,9 +36,11 @@ from cmem_plugin_reason.utils import (
     send_result,
 )
 
+PLUGIN_IRI = "https://plugin.eccenca.com/cmem-plugin-reason/validate"
+
 
 @Plugin(
-    label="Validate ontology consistency",
+    label="Validate",
     description="",
     documentation="""""",
     icon=Icon(package=__package__, file_name="obofoundry.png"),
@@ -50,8 +52,7 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="write_md",
             label="Write Markdown explanation file",
-            description="Write Markdown file with explanation to project. ⚠️ Existing files will "
-            "be overwritten.",
+            description="Write Markdown file with explanation to project.",
             default_value=False,
         ),
         PluginParameter(
@@ -73,7 +74,7 @@ from cmem_plugin_reason.utils import (
             name="md_filename",
             label="Output filename",
             description="The filename of the Markdown file with the explanation of "
-            "inconsistencies.",
+            "inconsistencies.⚠️ Existing files will be overwritten.",
         ),
         PluginParameter(
             param_type=BoolParameterType(),
@@ -151,8 +152,7 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--language-annotation rdfs:label "Ontology Validation Result {utctime}" en '
                 f"--language-annotation rdfs:comment "
                 f'"Ontology validation of <{self.ontology_graph_iri}>" en '
-                f"--language-annotation prov:wasGeneratedBy "
-                f'"cmem-plugin-validate ({self.reasoner})" en '
+                f'--link-annotation prov:wasGeneratedBy "{PLUGIN_IRI}/{self.reasoner}" '
                 f'--link-annotation prov:wasDerivedFrom "{self.ontology_graph_iri}" '
                 f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
                 f'--output "{self.temp}/output.ttl"'
@@ -182,26 +182,18 @@ class ValidatePlugin(WorkflowPlugin):
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
         self.validate(graphs)
-        files = ["catalog-v001.xml", self.md_filename, *graphs.values()]
-        if self.produce_graph:
-            files.append("output.ttl")
-
-        text = (Path(self.temp) / self.md_filename).read_text()
-        if text == "No explanations found.":
-            remove_temp(self, files)
-            return None
 
         if self.produce_graph:
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
-
         if self.write_md:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
+        text = (Path(self.temp) / self.md_filename).read_text()
 
-        remove_temp(self, files)
+        remove_temp(self)
 
-        if self.stop_at_inconsistencies:
+        if self.stop_at_inconsistencies and text != "No explanations found.":
             raise RuntimeError("Inconsistencies found in Ontology.")
 
         entities = [

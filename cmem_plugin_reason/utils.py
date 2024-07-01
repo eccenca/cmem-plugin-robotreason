@@ -140,7 +140,7 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     try:
         plugin_type = result["results"]["bindings"][0]["type"]["value"]
     except IndexError:
-        plugin.log.warning("Could not add provenance data to output file")
+        plugin.log.warning("Could not add provenance data to output graph.")
         return
 
     param_split = (

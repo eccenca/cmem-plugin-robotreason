@@ -13,8 +13,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Changed
 
-- Keep original output ("No explanations found.") if no inconsistencies found with Validate plugin
-- Provenance data in output graphs now includes plugin parameter settings
+- keep original output ("No explanations found.") if no inconsistencies found with Validate plugin
+- provenance data in output graphs now includes plugin parameter settings
 
 
 ## [1.0.0beta1] 2024-07-01

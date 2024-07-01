@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Fixed
 
-- `prov:generatedBy` in output graphs now refers to a plugin IRI instead of a literal
+- `prov:wasGeneratedBy` in output graphs now refers to a plugin IRI instead of a literal
 
 ### Changed
 

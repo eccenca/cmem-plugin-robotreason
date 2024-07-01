@@ -175,6 +175,25 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
+    def post_provenance(self, plugin_id: str, context: ExecutionContext) -> None:
+        """TODO: Post provenance with query"""
+        plugin_iri = f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
+        project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
+        construct = f"""
+        PREFIX dif: <https://vocab.eccenca.com/di/functions/>
+        CONSTRUCT {{
+            GRAPH <{self.output_graph_iri}> {{
+                <{self.output_graph_iri}> prov:generatedBy <{plugin_iri}> .
+                <{plugin_iri}> a <https://vocab.eccenca.com/di/functions/{plugin_id}> .
+                <{plugin_iri}> ?p ?o .
+            }}
+        }}
+        FROM <{project_graph}>
+        WHERE {{
+            <{plugin_iri}> ?p ?o .
+            FILTER((STRSTARTS(STR(?p), 'https://vocab.eccenca.com/di/functions/param_'))
+        }}"""  # noqa: F841
+
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)

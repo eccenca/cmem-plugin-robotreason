@@ -128,12 +128,13 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
 
     type_query = f"""
-    SELECT ?parameter ?type {{
+    SELECT ?type {{
         GRAPH <{project_graph}> {{
             <{plugin_iri}> a ?type .
             FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
         }}
     }}"""
+
     result = json.loads(post_select(query=type_query))
 
     try:
@@ -142,16 +143,6 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
         plugin.log.warning("Could not add provenance data to output file")
         return
 
-    plugin.log.info(str(plugin_type))
-
-    parameter_query = f"""
-        SELECT ?parameter ?type {{
-            GRAPH <{project_graph}> {{
-                <{plugin_iri}> ?parameter ?o .
-                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
-            }}
-        }}"""
-
     param_split = (
         plugin_type.replace(
             "https://vocab.eccenca.com/di/functions/Plugin_",
@@ -159,6 +150,14 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
         )
         + "_"
     )
+
+    parameter_query = f"""
+        SELECT ?parameter {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> ?parameter ?o .
+                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
+            }}
+        }}"""
 
     result = json.loads(post_select(query=parameter_query))
     param_sparql = f"<{plugin_iri}> a <{plugin_type}> . "
@@ -173,8 +172,6 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
             <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{plugin_iri}> .
             {param_sparql}
           }}
-        }}
-        """
+        }}"""
 
-    plugin.log.info(insert_query)
     post_update(query=insert_query)

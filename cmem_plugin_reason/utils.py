@@ -67,9 +67,9 @@ def convert_iri_to_filename(value: str) -> str:
     return value + ".nt"
 
 
-def create_xml_catalog_file(temp: str, graphs: dict) -> None:
+def create_xml_catalog_file(dir_: str, graphs: dict) -> None:
     """Create XML catalog file"""
-    file_name = Path(temp) / "catalog-v001.xml"
+    file_name = Path(dir_) / "catalog-v001.xml"
     catalog = Element("catalog")
     catalog.set("prefer", "public")
     catalog.set("xmlns", "urn:oasis:names:tc:entity:xmlns:xml:catalog")

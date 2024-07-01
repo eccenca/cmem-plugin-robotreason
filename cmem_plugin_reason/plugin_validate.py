@@ -50,7 +50,8 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="write_md",
             label="Write Markdown explanation file",
-            description="Write Markdownn file with explanation to project.",
+            description="Write Markdown file with explanation to project. ⚠️ Existing files will "
+            "be overwritten.",
             default_value=False,
         ),
         PluginParameter(
@@ -65,7 +66,7 @@ from cmem_plugin_reason.utils import (
             name="output_graph_iri",
             label="Output graph IRI",
             description="The IRI of the output graph for the inconsistency validation. ⚠️ Existing "
-            "graph will be overwritten.",
+            "graphs will be overwritten.",
         ),
         PluginParameter(
             param_type=StringParameterType(),

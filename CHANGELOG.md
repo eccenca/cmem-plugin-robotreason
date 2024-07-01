@@ -12,8 +12,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Changed
 
-- completed validation for IRI parameters
-- "Annnotate inferred subclass axioms" is now not an advanced parameter
+- complete validation for IRI parameters
+- Remove "Annnotate inferred subclass axioms" parameter
 
 ## [1.0.0alpha3] 2024-06-28
 

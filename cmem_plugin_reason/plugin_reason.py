@@ -159,20 +159,12 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
-        PluginParameter(
-            param_type=BoolParameterType(),
-            name="annotate_inferred_axioms",
-            label="Annnotate inferred subclass axioms",
-            description="⚠️ This parameter can only be enabled if the only enabled axiom generator "
-            "is SubClass.",
-            default_value=False,
-        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
     """Reason plugin"""
 
-    def __init__(  # noqa: PLR0913, C901
+    def __init__(  # noqa: PLR0913
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
@@ -192,7 +184,6 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
-        annotate_inferred_axioms: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -226,11 +217,6 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid value for parameter "Reasoner". '
         if True not in self.axioms.values():
             errors += "No axiom generator selected. "
-        if annotate_inferred_axioms and [k for k, v in self.axioms.items() if v] != ["SubClass"]:
-            errors += (
-                'Parameter "Annnotate inferred subclass axioms" can only be enabled if the only '
-                "enabled axiom generator is SubClass. "
-            )
         if max_ram_percentage not in range(1, 101):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
@@ -239,7 +225,6 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.result_graph_iri = result_graph_iri
         self.reasoner = reasoner
-        self.annotate_inferred_axioms = str(annotate_inferred_axioms).lower()
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 
@@ -268,7 +253,6 @@ class ReasonPlugin(WorkflowPlugin):
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
-            f"--annotate-inferred-axioms {self.annotate_inferred_axioms} "
             f"--include-indirect true "
             f"--exclude-duplicate-axioms true "
             f"--exclude-owl-thing true "

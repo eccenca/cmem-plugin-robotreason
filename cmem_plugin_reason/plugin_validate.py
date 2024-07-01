@@ -32,11 +32,10 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    post_provenance,
     remove_temp,
     send_result,
 )
-
-PLUGIN_IRI = "https://plugin.eccenca.com/cmem-plugin-reason/validate"
 
 
 @Plugin(
@@ -152,7 +151,6 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--language-annotation rdfs:label "Ontology Validation Result {utctime}" en '
                 f"--language-annotation rdfs:comment "
                 f'"Ontology validation of <{self.ontology_graph_iri}>" en '
-                f'--link-annotation prov:wasGeneratedBy "{PLUGIN_IRI}/{self.reasoner}" '
                 f'--link-annotation prov:wasDerivedFrom "{self.ontology_graph_iri}" '
                 f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
                 f'--output "{self.temp}/output.ttl"'
@@ -175,25 +173,6 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
-    def post_provenance(self, plugin_id: str, context: ExecutionContext) -> None:
-        """TODO: Post provenance with query"""
-        plugin_iri = f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
-        project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
-        construct = f"""
-        PREFIX dif: <https://vocab.eccenca.com/di/functions/>
-        CONSTRUCT {{
-            GRAPH <{self.output_graph_iri}> {{
-                <{self.output_graph_iri}> prov:generatedBy <{plugin_iri}> .
-                <{plugin_iri}> a <https://vocab.eccenca.com/di/functions/{plugin_id}> .
-                <{plugin_iri}> ?p ?o .
-            }}
-        }}
-        FROM <{project_graph}>
-        WHERE {{
-            <{plugin_iri}> ?p ?o .
-            FILTER((STRSTARTS(STR(?p), 'https://vocab.eccenca.com/di/functions/param_'))
-        }}"""  # noqa: F841
-
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
@@ -205,6 +184,12 @@ class ValidatePlugin(WorkflowPlugin):
         if self.produce_graph:
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
+            post_provenance(
+                self.output_graph_iri,
+                "cmem_plugin_reason-plugin_validate-ValidatePlugin",
+                context,
+            )
+
         if self.write_md:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)

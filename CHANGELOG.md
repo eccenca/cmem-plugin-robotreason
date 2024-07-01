@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+
 ### Fixed
 
 - `prov:generatedBy` in output graphs now refers to a plugin IRI instead of a literal
@@ -13,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Changed
 
 - Keep original output ("No explanations found.") if no inconsistencies found with Validate plugin
+- Provenance data in output graphs now includes plugin parameter settings
 
 
 ## [1.0.0beta1] 2024-07-01

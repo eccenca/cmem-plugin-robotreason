@@ -25,11 +25,10 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    post_provenance,
     remove_temp,
     send_result,
 )
-
-PLUGIN_IRI = "https://plugin.eccenca.com/cmem-plugin-reason/reason"
 
 
 @Plugin(
@@ -268,7 +267,6 @@ class ReasonPlugin(WorkflowPlugin):
             f"--language-annotation rdfs:comment "
             f'"Reasoning result set of <{self.data_graph_iri}> and '
             f'<{self.ontology_graph_iri}>" en '
-            f'--link-annotation prov:wasGeneratedBy "{PLUGIN_IRI}/{self.reasoner}" '
             f'--link-annotation prov:wasDerivedFrom "{self.data_graph_iri}" '
             f"--link-annotation prov:wasDerivedFrom "
             f'"{self.ontology_graph_iri}" '
@@ -292,4 +290,9 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
+        post_provenance(
+            self.result_graph_iri,
+            "cmem_plugin_reason-plugin_reason-ReasonPlugin",
+            context,
+        )
         remove_temp(self)

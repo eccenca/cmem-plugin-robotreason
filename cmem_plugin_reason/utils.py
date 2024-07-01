@@ -8,10 +8,11 @@ from shutil import rmtree
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
+from cmem.cmempy.dp.proxy.update import post
 from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
-from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
+from cmem_plugin_base.dataintegration.plugins import ExecutionContext, WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import IntParameterType
 from defusedxml import minidom
 
@@ -115,3 +116,27 @@ def remove_temp(plugin: WorkflowPlugin) -> None:
         rmtree(plugin.temp)
     except (OSError, FileNotFoundError) as err:
         plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
+
+
+def post_provenance(graph: str, plugin_id: str, context: ExecutionContext) -> None:
+    """Insert provenance"""
+    plugin_iri = (
+        f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
+    )
+    project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
+    query = f"""
+    INSERT {{
+        GRAPH <{graph}> {{
+            <{graph}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{plugin_iri}> .
+            <{plugin_iri}> a <https://vocab.eccenca.com/di/functions/Plugin_{plugin_id}> .
+            <{plugin_iri}> ?p ?o .
+        }}
+    }}
+    WHERE {{
+        GRAPH <{project_graph}> {{
+            <{plugin_iri}> ?p ?o .
+            FILTER(STRSTARTS(STR(?p), "https://vocab.eccenca.com/di/functions/param_"))
+        }}
+    }}"""
+
+    post(query=query)

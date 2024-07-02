@@ -187,6 +187,20 @@ class ReasonPlugin(WorkflowPlugin):
         sub_object_property: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
+        self.sub_class = sub_class
+        self.equivalent_class = equivalent_class
+        self.disjoint_classes = disjoint_classes
+        self.data_property_characteristic = data_property_characteristic
+        self.equivalent_data_properties = equivalent_data_properties
+        self.sub_data_property = sub_data_property
+        self.class_assertion = class_assertion
+        self.property_assertion = property_assertion
+        self.equivalent_object_property = equivalent_object_property
+        self.inverse_object_properties = inverse_object_properties
+        self.object_property_characteristic = object_property_characteristic
+        self.sub_object_property = sub_object_property
+        self.object_property_range = object_property_range
+        self.object_property_domain = object_property_domain
         self.axioms = {
             "SubClass": sub_class,
             "EquivalentClass": equivalent_class,

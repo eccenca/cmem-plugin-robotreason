@@ -5,6 +5,7 @@ import re
 import unicodedata
 from collections import OrderedDict
 from pathlib import Path
+from secrets import token_hex
 from shutil import rmtree
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -128,9 +129,10 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
 
     type_query = f"""
-    SELECT ?type {{
+    SELECT ?type ?label {{
         GRAPH <{project_graph}> {{
             <{plugin_iri}> a ?type .
+            <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
             FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
         }}
     }}"""
@@ -142,6 +144,7 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     except IndexError:
         plugin.log.warning("Could not add provenance data to output graph.")
         return
+    plugin_label = result["results"]["bindings"][0]["label"]["value"]
 
     param_split = (
         plugin_type.replace(
@@ -159,17 +162,20 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
             }}
         }}"""
 
+    new_plugin_iri = f'{"_".join(plugin_iri.split("_")[:-1])}_{token_hex(8)}'
     result = json.loads(post_select(query=parameter_query))
-    param_sparql = f"<{plugin_iri}> a <{plugin_type}> . "
+    param_sparql = ""
     for binding in result["results"]["bindings"]:
         param_iri = binding["parameter"]["value"]
         param_val = plugin.__dict__[binding["parameter"]["value"].split(param_split)[1]]
-        param_sparql += f'\n<{plugin_iri}> <{param_iri}> "{param_val}" . '
+        param_sparql += f'\n<{new_plugin_iri}> <{param_iri}> "{param_val}" .'
 
     insert_query = f"""
         INSERT DATA {{
           GRAPH <{plugin.output_graph_iri}> {{
-            <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{plugin_iri}> .
+            <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{new_plugin_iri}> .
+            <{new_plugin_iri}> a <{plugin_type}>, <https://vocab.eccenca.com/di/CustomTask> .
+            <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
             {param_sparql}
           }}
         }}"""

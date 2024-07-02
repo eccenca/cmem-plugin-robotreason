@@ -172,12 +172,13 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
 
     insert_query = f"""
         INSERT DATA {{
-          GRAPH <{plugin.output_graph_iri}> {{
-            <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy> <{new_plugin_iri}> .
-            <{new_plugin_iri}> a <{plugin_type}>, <https://vocab.eccenca.com/di/CustomTask> .
-            <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
-            {param_sparql}
-          }}
+            GRAPH <{plugin.output_graph_iri}> {{
+                <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy>
+                    <{new_plugin_iri}> .
+                <{new_plugin_iri}> a <{plugin_type}>, <https://vocab.eccenca.com/di/CustomTask> .
+                <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
+                {param_sparql}
+            }}
         }}"""
 
     post_update(query=insert_query)

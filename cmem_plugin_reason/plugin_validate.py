@@ -40,9 +40,13 @@ from cmem_plugin_reason.utils import (
 
 @Plugin(
     label="Validate",
-    description="",
-    documentation="""""",
-    icon=Icon(package=__package__, file_name="obofoundry.png"),
+    description="Validates the consistency of an OWL ontology.",
+    documentation="""A task validating the consistency of an OWL ontology and generating an
+    explanation if inconsistencies are found. The explanation can be written to the project as a
+    Markdown file and/or to a specified graph. The Markdown string is also provided as an output
+    entity using the path "text". The following reasoners are supported: ELK, Expression
+    Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
+    icon=Icon(package=__package__, file_name="validate.png"),
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,

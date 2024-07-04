@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - complete validation for IRI parameters
 - remove "Annnotate inferred subclass axioms" parameter in Reason plugin
+- new icons
 
 ## [1.0.0alpha3] 2024-06-28
 

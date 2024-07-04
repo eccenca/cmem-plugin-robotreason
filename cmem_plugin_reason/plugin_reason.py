@@ -33,12 +33,11 @@ from cmem_plugin_reason.utils import (
 
 @Plugin(
     label="Reason",
-    icon=Icon(file_name="obofoundry.png", package=__package__),
-    description="Given a data and an ontology graph, this task performs reasoning using ROBOT.",
-    documentation="""A task performing reasoning using ROBOT (ROBOT is an OBO Tool).
-    It takes an OWL ontology and a data graph as inputs and writes the reasoning result
-    to a specified graph. The following reasoner options are supported: ELK, Expression
-    Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
+    icon=Icon(file_name="reason.png", package=__package__),
+    description="Performs OWL reasoning.",
+    documentation="""A task performing OWL reasoning. With an OWL ontology and a data graph as input
+    the reasoning result is written to a specified graph. The following reasoners are supported:
+    ELK, Expression Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,

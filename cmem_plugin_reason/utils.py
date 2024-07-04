@@ -129,13 +129,14 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
 
     type_query = f"""
-    SELECT ?type ?label {{
-        GRAPH <{project_graph}> {{
-            <{plugin_iri}> a ?type .
-            <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-            FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
+        SELECT ?type ?label {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> a ?type .
+                <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+                FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
+            }}
         }}
-    }}"""
+    """
 
     result = json.loads(post_select(query=type_query))
 
@@ -160,7 +161,8 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
                 <{plugin_iri}> ?parameter ?o .
                 FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
             }}
-        }}"""
+        }}
+    """
 
     new_plugin_iri = f'{"_".join(plugin_iri.split("_")[:-1])}_{token_hex(8)}'
     result = json.loads(post_select(query=parameter_query))
@@ -179,6 +181,7 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
                 <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
                 {param_sparql}
             }}
-        }}"""
+        }}
+    """
 
     post_update(query=insert_query)

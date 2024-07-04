@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - keep original output ("No explanations found.") if no inconsistencies found with Validate plugin
 - provenance data in output graphs now includes plugin parameter settings
+- new icons
 
 
 ## [1.0.0beta1] 2024-07-01

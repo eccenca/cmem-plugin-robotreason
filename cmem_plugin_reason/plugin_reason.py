@@ -163,10 +163,10 @@ from cmem_plugin_reason.utils import (
         ),
         PluginParameter(
             param_type=BoolParameterType(),
-            name="validate_profile",
-            label="Validate profile",
-            description="""Validate the input ontology against an OWL profile (EL, DL, RL, QL, and
-                        Full)""",
+            name="validate_profiles",
+            label="Annotate ontology with valid OWL2 profiles",
+            description="""Validate the input ontology against OWL profiles (EL, DL, RL, QL, and
+                        Full) and annotate it in the result graph.""",
             default_value=False,
         ),
     ],
@@ -194,7 +194,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
-        validate_profile: bool = False,
+        validate_profiles: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -251,7 +251,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
         self.max_ram_percentage = max_ram_percentage
-        self.validate_profile = validate_profile
+        self.validate_profiles = validate_profiles
         self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
@@ -306,8 +306,8 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def validate(self, graphs: dict) -> None:
-        """Validate OWL2 profile"""
+    def validate_profile(self, graphs: dict) -> None:
+        """Validate OWL2 profiles"""
         ontology_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         valid_profiles = []
         for profile in ("EL", "RL", "QL", "DL", "Full"):
@@ -339,7 +339,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
-        if self.validate_profile:
-            self.validate(graphs)
+        if self.validate_profiles:
+            self.validate_profile(graphs)
         post_provenance(self, get_provenance(self, context))
         remove_temp(self)

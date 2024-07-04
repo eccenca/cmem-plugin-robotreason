@@ -32,6 +32,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    get_provenance,
     post_provenance,
     remove_temp,
     send_result,
@@ -189,7 +190,7 @@ class ValidatePlugin(WorkflowPlugin):
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
             setup_cmempy_user_access(context.user)
-            post_provenance(self, context)
+            post_provenance(self, get_provenance(self, context))
 
         if self.write_md:
             setup_cmempy_user_access(context.user)

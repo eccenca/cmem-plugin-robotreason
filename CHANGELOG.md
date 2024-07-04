@@ -7,7 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [unreleased]
 
+### Added
 
+- parameter for validating the input ontology against OWL2 profiles (EL, DL, RL, QL, and Full) in Reason plugin
 
 ## [1.0.0beta2] 2024-07-04
 

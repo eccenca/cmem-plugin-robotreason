@@ -121,22 +121,47 @@ def remove_temp(plugin: WorkflowPlugin) -> None:
         plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
 
 
-def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
-    """Insert provenance"""
+def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
+    """Post provenance"""
+    if not prov:
+        return
+    param_sparql = ""
+    for name, iri in prov["parameters"].items():
+        param_sparql += f'\n<{prov["plugin_iri"]}> <{iri}> "{plugin.__dict__[name]}" .'
+
+    insert_query = f"""
+        INSERT DATA {{
+            GRAPH <{plugin.output_graph_iri}> {{
+                <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy>
+                    <{prov["plugin_iri"]}> .
+                <{prov["plugin_iri"]}> a <{prov["plugin_type"]}>,
+                    <https://vocab.eccenca.com/di/CustomTask> .
+                <{prov["plugin_iri"]}> <http://www.w3.org/2000/01/rdf-schema#label>
+                    "{prov['plugin_label']}" .
+                {param_sparql}
+            }}
+        }}
+    """
+
+    post_update(query=insert_query)
+
+
+def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | None:
+    """Get provenance information"""
     plugin_iri = (
         f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
     )
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
 
     type_query = f"""
-        SELECT ?type ?label {{
-            GRAPH <{project_graph}> {{
-                <{plugin_iri}> a ?type .
-                <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-                FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
+            SELECT ?type ?label {{
+                GRAPH <{project_graph}> {{
+                    <{plugin_iri}> a ?type .
+                    <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+                    FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
+                }}
             }}
-        }}
-    """
+        """
 
     result = json.loads(post_select(query=type_query))
 
@@ -144,7 +169,7 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
         plugin_type = result["results"]["bindings"][0]["type"]["value"]
     except IndexError:
         plugin.log.warning("Could not add provenance data to output graph.")
-        return
+        return None
     plugin_label = result["results"]["bindings"][0]["label"]["value"]
 
     param_split = (
@@ -156,32 +181,27 @@ def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
     )
 
     parameter_query = f"""
-        SELECT ?parameter {{
-            GRAPH <{project_graph}> {{
-                <{plugin_iri}> ?parameter ?o .
-                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
+            SELECT ?parameter {{
+                GRAPH <{project_graph}> {{
+                    <{plugin_iri}> ?parameter ?o .
+                    FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
+                }}
             }}
-        }}
-    """
+        """
 
     new_plugin_iri = f'{"_".join(plugin_iri.split("_")[:-1])}_{token_hex(8)}'
     result = json.loads(post_select(query=parameter_query))
-    param_sparql = ""
+
+    prov = {
+        "plugin_iri": new_plugin_iri,
+        "plugin_label": plugin_label,
+        "plugin_type": plugin_type,
+        "parameters": {},
+    }
+
     for binding in result["results"]["bindings"]:
         param_iri = binding["parameter"]["value"]
-        param_val = plugin.__dict__[binding["parameter"]["value"].split(param_split)[1]]
-        param_sparql += f'\n<{new_plugin_iri}> <{param_iri}> "{param_val}" .'
+        param_name = param_iri.split(param_split)[1]
+        prov["parameters"][param_name] = param_iri
 
-    insert_query = f"""
-        INSERT DATA {{
-            GRAPH <{plugin.output_graph_iri}> {{
-                <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy>
-                    <{new_plugin_iri}> .
-                <{new_plugin_iri}> a <{plugin_type}>, <https://vocab.eccenca.com/di/CustomTask> .
-                <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
-                {param_sparql}
-            }}
-        }}
-    """
-
-    post_update(query=insert_query)
+    return prov

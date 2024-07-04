@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
+from cmem.cmempy.dp.proxy.update import post
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
@@ -25,6 +26,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    get_provenance,
     post_provenance,
     remove_temp,
     send_result,
@@ -159,6 +161,14 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="validate_profile",
+            label="Validate profile",
+            description="""Validate the input ontology against an OWL profile (EL, DL, RL, QL, and
+                        Full)""",
+            default_value=False,
+        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
@@ -184,6 +194,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
+        validate_profile: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -240,6 +251,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
         self.max_ram_percentage = max_ram_percentage
+        self.validate_profile = validate_profile
         self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
@@ -294,8 +306,32 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
+    def validate(self, graphs: dict) -> None:
+        """Validate OWL2 profile"""
+        ontology_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
+        valid_profiles = []
+        for profile in ("EL", "RL", "QL", "DL", "Full"):
+            cmd = (
+                f"java -jar cmem_plugin_reason/bin/robot.jar validate-profile --profile {profile} "
+                f"--input {ontology_location}"
+            )
+            response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+            if response.stdout[-43:] == b"[Ontology and imports closure in profile]\n\n":
+                valid_profiles.append(profile)
+
+        profiles = '", "'.join(valid_profiles)
+        query = f"""
+            INSERT DATA {{
+                GRAPH <{self.output_graph_iri}> {{
+                    <{self.ontology_graph_iri}> <https://vocab.eccenca.com/plugin/reason/profile>
+                        "{profiles}" .
+                }}
+            }}
+        """
+        post(query=query)
+
     def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
-        """Execute plugin"""
+        """`Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
         self.get_graphs(graphs, context)
@@ -303,5 +339,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
-        post_provenance(self, context)
+        if self.validate_profile:
+            self.validate(graphs)
+        post_provenance(self, get_provenance(self, context))
         remove_temp(self)

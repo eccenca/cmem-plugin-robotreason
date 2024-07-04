@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+
+## [unreleased]
+
+
+
 ## [1.0.0beta2] 2024-07-04
 
 ### Fixed
@@ -27,7 +32,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - complete validation for IRI parameters
 - remove "Annnotate inferred subclass axioms" parameter in Reason plugin
-- new icons
 
 ## [1.0.0alpha3] 2024-06-28
 

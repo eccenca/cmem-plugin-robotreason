@@ -90,7 +90,7 @@ Maximum heap size for the Java virtual machine in the DI container running the r
 
 # Validate
 
-In case ontology inconsistencies are found, the plugin outputs the explanation as text in Markdown format using the path "text".
+The plugin outputs the explanation as text in Markdown format using the path "text".
 
 ## Options
 
@@ -121,6 +121,10 @@ The IRI of the output graph for the reasoning result.
 ### Write markdown explanation file
 
 If enabled, an explanation markdown file is written to the project.
+
+### Output filename
+
+The filename of the Markdown file with the explanation of inconsistencies.
 
 :warning: Existing files will be overwritten.
 

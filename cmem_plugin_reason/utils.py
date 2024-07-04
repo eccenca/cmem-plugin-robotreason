@@ -1,16 +1,21 @@
 """Common constants and functions"""
 
+import json
 import re
 import unicodedata
 from collections import OrderedDict
 from pathlib import Path
+from secrets import token_hex
+from shutil import rmtree
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
+from cmem.cmempy.dp.proxy.sparql import post as post_select
+from cmem.cmempy.dp.proxy.update import post as post_update
 from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
-from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
+from cmem_plugin_base.dataintegration.plugins import ExecutionContext, WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import IntParameterType
 from defusedxml import minidom
 
@@ -108,14 +113,75 @@ def send_result(iri: str, filepath: Path) -> None:
     )
 
 
-def remove_temp(plugin: WorkflowPlugin, files: list) -> None:
-    """Remove temproray files"""
-    for file in files:
-        try:
-            (Path(plugin.temp) / file).unlink()
-        except (OSError, FileNotFoundError) as err:
-            plugin.log.warning(f"Cannot remove file {file} ({err})")
+def remove_temp(plugin: WorkflowPlugin) -> None:
+    """Remove temporary files"""
     try:
-        Path(plugin.temp).rmdir()
+        rmtree(plugin.temp)
     except (OSError, FileNotFoundError) as err:
         plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
+
+
+def post_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> None:
+    """Insert provenance"""
+    plugin_iri = (
+        f"http://dataintegration.eccenca.com/{context.task.project_id()}/{context.task.task_id()}"
+    )
+    project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
+
+    type_query = f"""
+        SELECT ?type ?label {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> a ?type .
+                <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+                FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
+            }}
+        }}
+    """
+
+    result = json.loads(post_select(query=type_query))
+
+    try:
+        plugin_type = result["results"]["bindings"][0]["type"]["value"]
+    except IndexError:
+        plugin.log.warning("Could not add provenance data to output graph.")
+        return
+    plugin_label = result["results"]["bindings"][0]["label"]["value"]
+
+    param_split = (
+        plugin_type.replace(
+            "https://vocab.eccenca.com/di/functions/Plugin_",
+            "https://vocab.eccenca.com/di/functions/param_",
+        )
+        + "_"
+    )
+
+    parameter_query = f"""
+        SELECT ?parameter {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> ?parameter ?o .
+                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
+            }}
+        }}
+    """
+
+    new_plugin_iri = f'{"_".join(plugin_iri.split("_")[:-1])}_{token_hex(8)}'
+    result = json.loads(post_select(query=parameter_query))
+    param_sparql = ""
+    for binding in result["results"]["bindings"]:
+        param_iri = binding["parameter"]["value"]
+        param_val = plugin.__dict__[binding["parameter"]["value"].split(param_split)[1]]
+        param_sparql += f'\n<{new_plugin_iri}> <{param_iri}> "{param_val}" .'
+
+    insert_query = f"""
+        INSERT DATA {{
+            GRAPH <{plugin.output_graph_iri}> {{
+                <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy>
+                    <{new_plugin_iri}> .
+                <{new_plugin_iri}> a <{plugin_type}>, <https://vocab.eccenca.com/di/CustomTask> .
+                <{new_plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> "{plugin_label}" .
+                {param_sparql}
+            }}
+        }}
+    """
+
+    post_update(query=insert_query)

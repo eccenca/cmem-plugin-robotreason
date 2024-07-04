@@ -7,8 +7,7 @@
 
 <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/output/> a owl:Ontology ;
     rdfs:comment "Ontology validation of <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/>"@en ;
-    prov:wasDerivedFrom <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/> ;
-    prov:wasGeneratedBy "cmem-plugin-validate (elk)"@en .
+    prov:wasDerivedFrom <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/> .
 
 <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/D_6> a owl:NamedIndividual,
         <https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab/A> .

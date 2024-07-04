@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+## [1.0.0beta2] 2024-07-04
+
+### Fixed
+
+- `prov:wasGeneratedBy` in output graphs now refers to a plugin IRI instead of a literal
+
+### Changed
+
+- keep original output ("No explanations found.") if no inconsistencies found with Validate plugin
+- provenance data in output graphs now includes plugin parameter settings
+- new icons
+
+
 ## [1.0.0beta1] 2024-07-01
 
 ### Fixed
@@ -13,14 +26,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Changed
 
 - complete validation for IRI parameters
-- Remove "Annnotate inferred subclass axioms" parameter
+- remove "Annnotate inferred subclass axioms" parameter in Reason plugin
+- new icons
 
 ## [1.0.0alpha3] 2024-06-28
 
 ### Added
 
 - "Annotate inferred axioms" parameter in Reason plugin
-- "Maximum RAM percentage" parameter in Reason and Validate plugins
+- "Maximum RAM percentage" parameter
 
 ### Changed
 

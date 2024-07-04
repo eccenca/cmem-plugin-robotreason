@@ -25,6 +25,7 @@ from cmem_plugin_reason.utils import (
     ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
+    post_provenance,
     remove_temp,
     send_result,
 )
@@ -32,12 +33,11 @@ from cmem_plugin_reason.utils import (
 
 @Plugin(
     label="Reason",
-    icon=Icon(file_name="obofoundry.png", package=__package__),
-    description="Given a data and an ontology graph, this task performs reasoning using ROBOT.",
-    documentation="""A task performing reasoning using ROBOT (ROBOT is an OBO Tool).
-    It takes an OWL ontology and a data graph as inputs and writes the reasoning result
-    to a specified graph. The following reasoner options are supported: ELK, Expression
-    Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
+    icon=Icon(file_name="reason.png", package=__package__),
+    description="Performs OWL reasoning.",
+    documentation="""A task performing OWL reasoning. With an OWL ontology and a data graph as input
+    the reasoning result is written to a specified graph. The following reasoners are supported:
+    ELK, Expression Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
@@ -56,7 +56,7 @@ from cmem_plugin_reason.utils import (
         ),
         PluginParameter(
             param_type=StringParameterType(),
-            name="result_graph_iri",
+            name="output_graph_iri",
             label="Result graph IRI",
             description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
             "will be overwritten.",
@@ -168,7 +168,7 @@ class ReasonPlugin(WorkflowPlugin):
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
-        result_graph_iri: str = "",
+        output_graph_iri: str = "",
         reasoner: str = "elk",
         class_assertion: bool = False,
         data_property_characteristic: bool = False,
@@ -207,11 +207,11 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid IRI for parameter "Data graph IRI". '
         if not validators.url(ontology_graph_iri):
             errors += 'Invalid IRI for parameter "Ontology graph IRI". '
-        if not validators.url(result_graph_iri):
+        if not validators.url(output_graph_iri):
             errors += 'Invalid IRI for parameter "Result graph IRI". '
-        if result_graph_iri and result_graph_iri == data_graph_iri:
+        if output_graph_iri and output_graph_iri == data_graph_iri:
             errors += "Result graph IRI cannot be the same as the data graph IRI. "
-        if result_graph_iri and result_graph_iri == ontology_graph_iri:
+        if output_graph_iri and output_graph_iri == ontology_graph_iri:
             errors += "Result graph IRI cannot be the same as the ontology graph IRI. "
         if reasoner not in REASONERS:
             errors += 'Invalid value for parameter "Reasoner". '
@@ -221,9 +221,23 @@ class ReasonPlugin(WorkflowPlugin):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
         if errors:
             raise ValueError(errors[:-1])
+        self.sub_class = sub_class
+        self.equivalent_class = equivalent_class
+        self.disjoint_classes = disjoint_classes
+        self.data_property_characteristic = data_property_characteristic
+        self.equivalent_data_properties = equivalent_data_properties
+        self.sub_data_property = sub_data_property
+        self.class_assertion = class_assertion
+        self.property_assertion = property_assertion
+        self.equivalent_object_property = equivalent_object_property
+        self.inverse_object_properties = inverse_object_properties
+        self.object_property_characteristic = object_property_characteristic
+        self.sub_object_property = sub_object_property
+        self.object_property_range = object_property_range
+        self.object_property_domain = object_property_domain
         self.data_graph_iri = data_graph_iri
         self.ontology_graph_iri = ontology_graph_iri
-        self.result_graph_iri = result_graph_iri
+        self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
@@ -260,14 +274,12 @@ class ReasonPlugin(WorkflowPlugin):
             f"--exclude-external-entities "
             f"reduce --reasoner {self.reasoner} "
             f'unmerge --input "{data_location}" '
-            f'annotate --ontology-iri "{self.result_graph_iri}" '
+            f'annotate --ontology-iri "{self.output_graph_iri}" '
             f"--remove-annotations "
             f'--language-annotation rdfs:label "Eccenca Reasoning Result {utctime}" en '
             f"--language-annotation rdfs:comment "
             f'"Reasoning result set of <{self.data_graph_iri}> and '
             f'<{self.ontology_graph_iri}>" en '
-            f"--language-annotation prov:wasGeneratedBy "
-            f'"cmem-plugin-reason ({self.reasoner})" en '
             f'--link-annotation prov:wasDerivedFrom "{self.data_graph_iri}" '
             f"--link-annotation prov:wasDerivedFrom "
             f'"{self.ontology_graph_iri}" '
@@ -290,5 +302,6 @@ class ReasonPlugin(WorkflowPlugin):
         create_xml_catalog_file(self.temp, graphs)
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
-        send_result(self.result_graph_iri, Path(self.temp) / "result.ttl")
-        remove_temp(self, ["catalog-v001.xml", "result.ttl", *graphs.values()])
+        send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
+        post_provenance(self, context)
+        remove_temp(self)

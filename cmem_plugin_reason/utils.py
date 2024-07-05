@@ -2,11 +2,13 @@
 
 import json
 import re
+import shlex
 import unicodedata
 from collections import OrderedDict
 from pathlib import Path
 from secrets import token_hex
 from shutil import rmtree
+from subprocess import CompletedProcess, run
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from cmem.cmempy.dp.proxy.graph import get_graph_import_tree, post_streamed
@@ -205,3 +207,9 @@ def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | 
         prov["parameters"][param_name] = param_iri
 
     return prov
+
+
+def robot(cmd: str, max_ram_percentage: int) -> CompletedProcess:
+    """Run robot.jar"""
+    cmd = f"java -XX:MaxRAMPercentage={max_ram_percentage} -jar {ROBOT} " + cmd
+    return run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603

@@ -1,9 +1,7 @@
 """Reasoning workflow plugin module"""
 
-import shlex
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import run
 from time import time
 from uuid import uuid4
 
@@ -23,12 +21,12 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
-    ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
     post_provenance,
     remove_temp,
+    robot,
     send_result,
 )
 
@@ -274,7 +272,6 @@ class ReasonPlugin(WorkflowPlugin):
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
             f'merge --input "{data_location}" '
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
@@ -298,7 +295,7 @@ class ReasonPlugin(WorkflowPlugin):
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )
-        response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+        response = robot(cmd, self.max_ram_percentage)
         if response.returncode != 0:
             if response.stdout:
                 raise OSError(response.stdout.decode())
@@ -311,11 +308,8 @@ class ReasonPlugin(WorkflowPlugin):
         ontology_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         valid_profiles = []
         for profile in ("EL", "RL", "QL", "DL", "Full"):
-            cmd = (
-                f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
-                f"validate-profile --profile {profile} --input {ontology_location}"
-            )
-            response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+            cmd = f"validate-profile --profile {profile} --input {ontology_location}"
+            response = robot(cmd, self.max_ram_percentage)
             if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):
                 valid_profiles.append(profile)
 
@@ -324,7 +318,7 @@ class ReasonPlugin(WorkflowPlugin):
             query = f"""
                 INSERT DATA {{
                     GRAPH <{self.output_graph_iri}> {{
-                        <{self.ontology_graph_iri}> 
+                        <{self.ontology_graph_iri}>
                             <https://vocab.eccenca.com/plugin/reason/profile> "{profiles}" .
                     }}
                 }}

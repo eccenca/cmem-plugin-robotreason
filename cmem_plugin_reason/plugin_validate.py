@@ -1,9 +1,7 @@
 """Ontology consistency validation workflow plugin module"""
 
-import shlex
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import run
 from time import time
 from uuid import uuid4
 
@@ -29,12 +27,12 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
-    ROBOT,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
     post_provenance,
     remove_temp,
+    robot,
     send_result,
 )
 
@@ -144,7 +142,6 @@ class ValidatePlugin(WorkflowPlugin):
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
 
         cmd = (
-            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
             f'merge --input "{data_location}" '
             f"explain --reasoner {self.reasoner} -M inconsistency "
             f'--explanation "{self.temp}/{self.md_filename}"'
@@ -161,7 +158,7 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--output "{self.temp}/output.ttl"'
             )
 
-        response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+        response = robot(cmd, self.max_ram_percentage)
         if response.returncode != 0:
             if response.stdout:
                 raise OSError(response.stdout.decode())

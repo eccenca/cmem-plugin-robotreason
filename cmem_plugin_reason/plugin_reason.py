@@ -312,23 +312,24 @@ class ReasonPlugin(WorkflowPlugin):
         valid_profiles = []
         for profile in ("EL", "RL", "QL", "DL", "Full"):
             cmd = (
-                f"java -jar cmem_plugin_reason/bin/robot.jar validate-profile --profile {profile} "
-                f"--input {ontology_location}"
+                f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
+                f"validate-profile --profile {profile} --input {ontology_location}"
             )
             response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
-            if response.stdout[-43:] == b"[Ontology and imports closure in profile]\n\n":
+            if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):
                 valid_profiles.append(profile)
 
-        profiles = '", "'.join(valid_profiles)
-        query = f"""
-            INSERT DATA {{
-                GRAPH <{self.output_graph_iri}> {{
-                    <{self.ontology_graph_iri}> <https://vocab.eccenca.com/plugin/reason/profile>
-                        "{profiles}" .
+        if valid_profiles:
+            profiles = '", "'.join(valid_profiles)
+            query = f"""
+                INSERT DATA {{
+                    GRAPH <{self.output_graph_iri}> {{
+                        <{self.ontology_graph_iri}> 
+                            <https://vocab.eccenca.com/plugin/reason/profile> "{profiles}" .
+                    }}
                 }}
-            }}
-        """
-        post(query=query)
+            """
+            post(query=query)
 
     def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
         """`Execute plugin"""

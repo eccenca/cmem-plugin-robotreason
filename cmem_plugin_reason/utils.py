@@ -18,12 +18,10 @@ from cmem_plugin_base.dataintegration.description import PluginParameter
 from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import ExecutionContext, WorkflowPlugin
-from cmem_plugin_base.dataintegration.types import IntParameterType
+from cmem_plugin_base.dataintegration.types import BoolParameterType, IntParameterType
 from defusedxml import minidom
 
 from . import __path__
-
-ROBOT = Path(__path__[0]) / "bin" / "robot.jar"
 
 REASONERS = OrderedDict(
     {
@@ -61,6 +59,15 @@ MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
     "reasoning process. ⚠️ Setting the percentage too high may result in an out of memory error.",
     default_value=MAX_RAM_PERCENTAGE_DEFAULT,
     advanced=True,
+)
+
+VALIDATE_PROFILES_PARAMETER = PluginParameter(
+    param_type=BoolParameterType(),
+    name="validate_profile",
+    label="Annotate ontology with valid OWL2 profiles",
+    description="""Validate the input ontology against OWL profiles (EL, DL, RL, QL, and
+                Full) and annotate the result graph.""",
+    default_value=False,
 )
 
 
@@ -211,5 +218,36 @@ def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | 
 
 def robot(cmd: str, max_ram_percentage: int) -> CompletedProcess:
     """Run robot.jar"""
-    cmd = f"java -XX:MaxRAMPercentage={max_ram_percentage} -jar {ROBOT} " + cmd
+    jar = Path(__path__[0]) / "bin" / "robot.jar"
+    cmd = f"java -XX:MaxRAMPercentage={max_ram_percentage} -jar {jar} " + cmd
     return run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+
+
+def validate_profiles(plugin: WorkflowPlugin, graphs: dict) -> list:
+    """Validate OWL2 profiles"""
+    ontology_location = f"{plugin.temp}/{graphs[plugin.ontology_graph_iri]}"
+    valid_profiles = []
+    for profile in ("Full", "DL", "RL", "QL"):
+        cmd = f"validate-profile --profile {profile} --input {ontology_location}"
+        response = robot(cmd, plugin.max_ram_percentage)
+        if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):
+            valid_profiles.append(profile)
+            if profile != "Full":
+                break
+
+    return valid_profiles
+
+
+def post_profiles(plugin: WorkflowPlugin, valid_profiles: list) -> None:
+    """Validate OWL2 profiles"""
+    if valid_profiles:
+        profiles = '", "'.join(valid_profiles)
+        query = f"""
+            INSERT DATA {{
+                GRAPH <{plugin.output_graph_iri}> {{
+                    <{plugin.ontology_graph_iri}>
+                        <https://vocab.eccenca.com/plugin/reason/profile> "{profiles}" .
+                }}
+            }}
+        """
+        post_update(query=query)

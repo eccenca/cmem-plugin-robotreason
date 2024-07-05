@@ -27,13 +27,16 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
+    VALIDATE_PROFILES_PARAMETER,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
+    post_profiles,
     post_provenance,
     remove_temp,
     robot,
     send_result,
+    validate_profiles,
 )
 
 
@@ -50,6 +53,7 @@ from cmem_plugin_reason.utils import (
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
+        VALIDATE_PROFILES_PARAMETER,
         PluginParameter(
             param_type=BoolParameterType(),
             name="write_md",
@@ -96,6 +100,7 @@ class ValidatePlugin(WorkflowPlugin):
         ontology_graph_iri: str = "",
         reasoner: str = "elk",
         produce_graph: bool = False,
+        validate_profile: bool = False,
         output_graph_iri: str = "",
         write_md: bool = False,
         md_filename: str = "",
@@ -124,6 +129,7 @@ class ValidatePlugin(WorkflowPlugin):
         self.write_md = write_md
         self.stop_at_inconsistencies = stop_at_inconsistencies
         self.md_filename = md_filename if write_md else "mdfile.md"
+        self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
         self.temp = f"reason_{uuid4().hex}"
 
@@ -175,6 +181,44 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
+    def add_profiles(self, valid_profiles: list) -> list | None:
+        """Add profile validation result to output"""
+        if not valid_profiles:
+            return None
+        profiles_str = "\n- ".join(valid_profiles)
+        with (Path(self.temp) / self.md_filename).open("a") as mdfile:
+            mdfile.write(f"\n\n\n# Valid Profiles:\n- {profiles_str}\n")
+        if self.produce_graph:
+            post_profiles(self, valid_profiles)
+        return valid_profiles
+
+    def make_entities(self, text: str, valid_profiles: list | None) -> Entities:
+        """Make entities"""
+        entities = [
+            Entity(
+                uri="https://eccenca.com/plugin_validateontology/md",
+                values=[[text]],
+            ),
+        ]
+
+        paths = [EntityPath(path="text")]
+
+        if valid_profiles:
+            entities.append(
+                Entity(
+                    uri="https://eccenca.com/plugin_validateontology/profiles",
+                    values=[[p] for p in valid_profiles],
+                )
+            )
+            paths.append(EntityPath(path="profile"))
+
+        schema = EntitySchema(
+            type_uri="https://eccenca.com/plugin_validateontology/result",
+            paths=paths,
+        )
+
+        return Entities(entities=entities, schema=schema)
+
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
@@ -189,9 +233,14 @@ class ValidatePlugin(WorkflowPlugin):
             setup_cmempy_user_access(context.user)
             post_provenance(self, get_provenance(self, context))
 
+        valid_profiles = (
+            self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else None
+        )
+
         if self.write_md:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
+
         text = (Path(self.temp) / self.md_filename).read_text()
 
         remove_temp(self)
@@ -199,14 +248,4 @@ class ValidatePlugin(WorkflowPlugin):
         if self.stop_at_inconsistencies and text != "No explanations found.":
             raise RuntimeError("Inconsistencies found in Ontology.")
 
-        entities = [
-            Entity(
-                uri="https://eccenca.com/plugin_validateontology/md",
-                values=[[text]],
-            )
-        ]
-        schema = EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/text",
-            paths=[EntityPath(path="text")],
-        )
-        return Entities(entities=iter(entities), schema=schema)
+        return self.make_entities(text, valid_profiles)

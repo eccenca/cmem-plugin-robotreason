@@ -7,7 +7,6 @@ from uuid import uuid4
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
-from cmem.cmempy.dp.proxy.update import post
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
@@ -21,13 +20,16 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
+    VALIDATE_PROFILES_PARAMETER,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
+    post_profiles,
     post_provenance,
     remove_temp,
     robot,
     send_result,
+    validate_profiles,
 )
 
 
@@ -41,6 +43,7 @@ from cmem_plugin_reason.utils import (
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
+        VALIDATE_PROFILES_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
         PluginParameter(
             param_type=GraphParameterType(
@@ -159,14 +162,6 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
-        PluginParameter(
-            param_type=BoolParameterType(),
-            name="validate_profiles",
-            label="Annotate ontology with valid OWL2 profiles",
-            description="""Validate the input ontology against OWL profiles (EL, DL, RL, QL, and
-                        Full) and annotate it in the result graph.""",
-            default_value=False,
-        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
@@ -192,7 +187,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
-        validate_profiles: bool = False,
+        validate_profile: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -248,8 +243,8 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
+        self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
-        self.validate_profiles = validate_profiles
         self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
@@ -303,28 +298,6 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def validate_profile(self, graphs: dict) -> None:
-        """Validate OWL2 profiles"""
-        ontology_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
-        valid_profiles = []
-        for profile in ("EL", "RL", "QL", "DL", "Full"):
-            cmd = f"validate-profile --profile {profile} --input {ontology_location}"
-            response = robot(cmd, self.max_ram_percentage)
-            if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):
-                valid_profiles.append(profile)
-
-        if valid_profiles:
-            profiles = '", "'.join(valid_profiles)
-            query = f"""
-                INSERT DATA {{
-                    GRAPH <{self.output_graph_iri}> {{
-                        <{self.ontology_graph_iri}>
-                            <https://vocab.eccenca.com/plugin/reason/profile> "{profiles}" .
-                    }}
-                }}
-            """
-            post(query=query)
-
     def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
         """`Execute plugin"""
         setup_cmempy_user_access(context.user)
@@ -334,7 +307,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
-        if self.validate_profiles:
-            self.validate_profile(graphs)
+        if self.validate_profile:
+            post_profiles(self, validate_profiles(self, graphs))
         post_provenance(self, get_provenance(self, context))
         remove_temp(self)

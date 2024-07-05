@@ -76,7 +76,7 @@ def tests(_setup: None) -> None:  # noqa: C901
             sub_class=False,
             class_assertion=True,
             property_assertion=True,
-            validate_profiles=True,
+            validate_profile=True,
         ).execute((), context=TestExecutionContext())
 
         result = get_remote_graph(REASON_RESULT_GRAPH_IRI)
@@ -91,6 +91,7 @@ def tests(_setup: None) -> None:  # noqa: C901
             produce_graph=True,
             output_graph_iri=OUTPUT_GRAPH_IRI,
             write_md=True,
+            validate_profile=True,
             md_filename=MD_FILENAME,
         ).execute((), context=TestExecutionContext(PROJECT_ID))
 

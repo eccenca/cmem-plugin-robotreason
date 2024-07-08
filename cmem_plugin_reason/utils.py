@@ -64,7 +64,7 @@ MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
 VALIDATE_PROFILES_PARAMETER = PluginParameter(
     param_type=BoolParameterType(),
     name="validate_profile",
-    label="Annotate ontology with valid OWL2 profiles",
+    label="Validate OWL2 profiles",
     description="""Validate the input ontology against OWL profiles (DL, EL, QL, RL, and
                 Full) and annotate the result graph.""",
     default_value=False,

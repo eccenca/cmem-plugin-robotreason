@@ -100,10 +100,10 @@ class ValidatePlugin(WorkflowPlugin):
         ontology_graph_iri: str = "",
         reasoner: str = "elk",
         produce_graph: bool = False,
-        validate_profile: bool = False,
         output_graph_iri: str = "",
         write_md: bool = False,
         md_filename: str = "",
+        validate_profile: bool = False,
         stop_at_inconsistencies: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:

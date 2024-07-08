@@ -228,6 +228,7 @@ def validate_profiles(plugin: WorkflowPlugin, graphs: dict) -> list:
     ontology_location = f"{plugin.temp}/{graphs[plugin.ontology_graph_iri]}"
     valid_profiles = []
     for profile in ("Full", "DL", "EL", "QL", "RL"):
+        plugin.log.info(f"Validating {profile} profile.")
         cmd = f"validate-profile --profile {profile} --input {ontology_location}"
         response = robot(cmd, plugin.max_ram_percentage)
         if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):

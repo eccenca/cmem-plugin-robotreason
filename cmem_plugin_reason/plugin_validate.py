@@ -138,6 +138,7 @@ class ValidatePlugin(WorkflowPlugin):
         if not Path(self.temp).exists():
             Path(self.temp).mkdir(parents=True)
         for graph in graphs:
+            self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
@@ -211,7 +212,7 @@ class ValidatePlugin(WorkflowPlugin):
         )
         return Entities(entities=entities, schema=schema)
 
-    def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
+    def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.ontology_graph_iri,))
@@ -235,9 +236,18 @@ class ValidatePlugin(WorkflowPlugin):
 
         text = (Path(self.temp) / self.md_filename).read_text()
 
-        remove_temp(self)
-
         if self.stop_at_inconsistencies and text != "No explanations found.":
             raise RuntimeError("Inconsistencies found in Ontology.")
 
         return self.make_entities(text, valid_profiles)
+
+    def execute(self, inputs: tuple, context: ExecutionContext) -> Entities:  # noqa: ARG002
+        """Remove temp files on error"""
+        try:
+            output = self._execute(context)
+            remove_temp(self)
+        except Exception as exc:
+            remove_temp(self)
+            raise type(exc)(exc) from exc
+        else:
+            return output

@@ -252,6 +252,7 @@ class ReasonPlugin(WorkflowPlugin):
         if not Path(self.temp).exists():
             Path(self.temp).mkdir(parents=True)
         for graph in graphs:
+            self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
@@ -298,7 +299,7 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
+    def _execute(self, context: ExecutionContext) -> None:
         """`Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
@@ -311,3 +312,11 @@ class ReasonPlugin(WorkflowPlugin):
             post_profiles(self, validate_profiles(self, graphs))
         post_provenance(self, get_provenance(self, context))
         remove_temp(self)
+
+    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
+        """Remove temp files on error"""
+        try:
+            self._execute(context)
+        except Exception as exc:
+            remove_temp(self)
+            raise type(exc)(exc) from exc

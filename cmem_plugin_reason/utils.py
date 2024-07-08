@@ -65,7 +65,7 @@ VALIDATE_PROFILES_PARAMETER = PluginParameter(
     param_type=BoolParameterType(),
     name="validate_profile",
     label="Annotate ontology with valid OWL2 profiles",
-    description="""Validate the input ontology against OWL profiles (EL, DL, RL, QL, and
+    description="""Validate the input ontology against OWL profiles (DL, EL, QL, RL, and
                 Full) and annotate the result graph.""",
     default_value=False,
 )
@@ -227,14 +227,13 @@ def validate_profiles(plugin: WorkflowPlugin, graphs: dict) -> list:
     """Validate OWL2 profiles"""
     ontology_location = f"{plugin.temp}/{graphs[plugin.ontology_graph_iri]}"
     valid_profiles = []
-    for profile in ("Full", "DL", "RL", "QL"):
+    for profile in ("Full", "DL", "EL", "QL", "RL"):
         cmd = f"validate-profile --profile {profile} --input {ontology_location}"
         response = robot(cmd, plugin.max_ram_percentage)
         if response.stdout.endswith(b"[Ontology and imports closure in profile]\n\n"):
             valid_profiles.append(profile)
-            if profile != "Full":
-                break
-
+        elif profile == "Full":
+            break
     return valid_profiles
 
 

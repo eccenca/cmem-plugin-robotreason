@@ -20,3 +20,6 @@
 # Valid Profiles:
 - Full
 - DL
+- EL
+- QL
+- RL

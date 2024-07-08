@@ -9,7 +9,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- parameter for validating the input ontology against OWL2 profiles (EL, DL, RL, QL, and Full) in Reason plugin
+- parameter for validating the input ontology against OWL2 profiles (DL, EL, QL, RL, and Full)
+- Validate plugin outputs valid profiles with path "profile"
+
+### Changed
+
+- Validate plugin outputs the Markdown result with path "markdown"
 
 ## [1.0.0beta2] 2024-07-04
 

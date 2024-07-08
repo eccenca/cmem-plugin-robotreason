@@ -183,9 +183,11 @@ class ValidatePlugin(WorkflowPlugin):
 
     def add_profiles(self, valid_profiles: list) -> list:
         """Add profile validation result to output"""
-        profiles_str = "\n- ".join(valid_profiles)
         with (Path(self.temp) / self.md_filename).open("a") as mdfile:
-            mdfile.write(f"\n\n\n# Valid Profiles:\n- {profiles_str}\n")
+            mdfile.write("\n\n\n# Valid Profiles:\n")
+            if valid_profiles:
+                profiles_str = "\n- ".join(valid_profiles)
+                mdfile.write(f"- {profiles_str}\n")
         if self.produce_graph:
             post_profiles(self, valid_profiles)
         return valid_profiles

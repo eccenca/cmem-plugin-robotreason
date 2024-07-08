@@ -2,8 +2,8 @@
 
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from time import time
-from uuid import uuid4
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
@@ -33,7 +33,6 @@ from cmem_plugin_reason.utils import (
     get_provenance,
     post_profiles,
     post_provenance,
-    remove_temp,
     robot,
     send_result,
     validate_profiles,
@@ -131,7 +130,6 @@ class ValidatePlugin(WorkflowPlugin):
         self.md_filename = md_filename if write_md else "mdfile.md"
         self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
-        self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
@@ -243,11 +241,5 @@ class ValidatePlugin(WorkflowPlugin):
 
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities:  # noqa: ARG002
         """Remove temp files on error"""
-        try:
-            output = self._execute(context)
-            remove_temp(self)
-        except Exception as exc:
-            remove_temp(self)
-            raise type(exc)(exc) from exc
-        else:
-            return output
+        with TemporaryDirectory() as self.temp:
+            return self._execute(context)

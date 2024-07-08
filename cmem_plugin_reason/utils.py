@@ -55,8 +55,8 @@ MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(
     param_type=IntParameterType(),
     name="max_ram_percentage",
     label="Maximum RAM Percentage",
-    description="Maximum heap size for the Java virtual machine in the DI container running the "
-    "reasoning process. ⚠️ Setting the percentage too high may result in an out of memory error.",
+    description="""Maximum heap size for the Java virtual machine in the DI container running the
+    reasoning process. ⚠️ Setting the percentage too high may result in an out of memory error.""",
     default_value=MAX_RAM_PERCENTAGE_DEFAULT,
     advanced=True,
 )
@@ -65,8 +65,8 @@ VALIDATE_PROFILES_PARAMETER = PluginParameter(
     param_type=BoolParameterType(),
     name="validate_profile",
     label="Validate OWL2 profiles",
-    description="""Validate the input ontology against OWL profiles (DL, EL, QL, RL, and
-                Full) and annotate the result graph.""",
+    description="""Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full) and
+    annotate the result graph.""",
     default_value=False,
 )
 

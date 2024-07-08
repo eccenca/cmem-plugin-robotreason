@@ -142,7 +142,7 @@ class ValidatePlugin(WorkflowPlugin):
                 setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
 
-    def validate(self, graphs: dict) -> None:
+    def explain(self, graphs: dict) -> None:
         """Reason"""
         data_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
@@ -194,18 +194,21 @@ class ValidatePlugin(WorkflowPlugin):
 
     def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
+        values = [[text]]
+        paths = [EntityPath(path="markdown")]
+        if self.validate_profile:
+            values.append(valid_profiles)
+            paths.append(EntityPath(path="profile"))
         entities = [
             Entity(
                 uri="https://eccenca.com/plugin_validateontology/result",
-                values=[[text], valid_profiles],
+                values=values,
             ),
         ]
-
         schema = EntitySchema(
             type_uri="https://eccenca.com/plugin_validateontology/type",
-            paths=[EntityPath(path="markdown"), EntityPath(path="profile")],
+            paths=paths,
         )
-
         return Entities(entities=entities, schema=schema)
 
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
@@ -214,7 +217,7 @@ class ValidatePlugin(WorkflowPlugin):
         graphs = get_graphs_tree((self.ontology_graph_iri,))
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
-        self.validate(graphs)
+        self.explain(graphs)
 
         if self.produce_graph:
             setup_cmempy_user_access(context.user)

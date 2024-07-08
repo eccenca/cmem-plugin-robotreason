@@ -133,8 +133,6 @@ class ValidatePlugin(WorkflowPlugin):
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
-        if not Path(self.temp).exists():
-            Path(self.temp).mkdir(parents=True)
         for graph in graphs:
             self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:

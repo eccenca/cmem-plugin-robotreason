@@ -98,8 +98,11 @@ def tests(_setup: None) -> None:  # noqa: C901
         val_errors = ""
         md_test = (Path(__path__[0]) / "test_validate.md").read_text()
 
-        if md_test != next(iter(result.entities)).values[0][0]:  # type: ignore[union-attr]
-            val_errors += "Entities output error. "
+        if next(iter(result.entities)).values[0][0] != md_test:  # type: ignore[union-attr]
+            val_errors += 'EntityPath "markdown" output error. '
+
+        if next(iter(result.entities)).values[1] != ["Full", "DL"]:  # type: ignore[union-attr]
+            val_errors += 'EntityPath "profile" output error. '
 
         if md_test != get_resource(PROJECT_ID, MD_FILENAME).decode():
             val_errors += "Markdown file error. "

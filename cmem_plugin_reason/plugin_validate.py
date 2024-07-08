@@ -181,10 +181,8 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
-    def add_profiles(self, valid_profiles: list) -> list | None:
+    def add_profiles(self, valid_profiles: list) -> list:
         """Add profile validation result to output"""
-        if not valid_profiles:
-            return None
         profiles_str = "\n- ".join(valid_profiles)
         with (Path(self.temp) / self.md_filename).open("a") as mdfile:
             mdfile.write(f"\n\n\n# Valid Profiles:\n- {profiles_str}\n")
@@ -192,29 +190,18 @@ class ValidatePlugin(WorkflowPlugin):
             post_profiles(self, valid_profiles)
         return valid_profiles
 
-    def make_entities(self, text: str, valid_profiles: list | None) -> Entities:
+    def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
         entities = [
             Entity(
-                uri="https://eccenca.com/plugin_validateontology/md",
-                values=[[text]],
+                uri="https://eccenca.com/plugin_validateontology/result",
+                values=[[text], valid_profiles],
             ),
         ]
 
-        paths = [EntityPath(path="text")]
-
-        if valid_profiles:
-            entities.append(
-                Entity(
-                    uri="https://eccenca.com/plugin_validateontology/profiles",
-                    values=[[p] for p in valid_profiles],
-                )
-            )
-            paths.append(EntityPath(path="profile"))
-
         schema = EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/result",
-            paths=paths,
+            type_uri="https://eccenca.com/plugin_validateontology/type",
+            paths=[EntityPath(path="markdown"), EntityPath(path="profile")],
         )
 
         return Entities(entities=entities, schema=schema)
@@ -234,7 +221,7 @@ class ValidatePlugin(WorkflowPlugin):
             post_provenance(self, get_provenance(self, context))
 
         valid_profiles = (
-            self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else None
+            self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else []
         )
 
         if self.write_md:

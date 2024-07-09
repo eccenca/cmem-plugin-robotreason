@@ -82,6 +82,10 @@ parameters to include inferred axiom generators:
 - ObjectPropertyRange
 - ObjectPropertyDomain
 
+### Validate OWL2 profiles
+
+Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full). The ontology is annotated in the output graph. 
+
 ### Maximum RAM Percentage
 
 Maximum heap size for the Java virtual machine in the DI container running the reasoning process.
@@ -90,7 +94,7 @@ Maximum heap size for the Java virtual machine in the DI container running the r
 
 # Validate
 
-The plugin outputs the explanation as text in Markdown format using the path "text".
+The plugin outputs the explanation as text in Markdown format using the path "markdown".
 
 ## Options
 
@@ -129,8 +133,12 @@ The filename of the Markdown file with the explanation of inconsistencies.
 :warning: Existing files will be overwritten.
 
 ### Stop at inconsistencies
-
 Raise an error if inconsistencies are found. If enabled, the plugin does not output entities.
+
+### Validate OWL2 profiles
+
+Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full). The valid profiles are added to the output 
+Markdown file and the ontology is annotated in the output graph. The plugin outputs the profiles using the path "profile". 
 
 ### Maximum RAM Percentage
 

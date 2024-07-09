@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+## [Unreleased]
+
+### Added
+
+- valid OWL profiles can be read on the input instead of validating the ontology in the plugin
+
+### Changed
+
+- use DCMI Metadata Terms for provenance
 
 ## [1.0.0beta3] 2024-07-09
 

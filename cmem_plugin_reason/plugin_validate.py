@@ -191,8 +191,8 @@ class ValidatePlugin(WorkflowPlugin):
 
     def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
-        values = [[text]]
-        paths = [EntityPath(path="markdown")]
+        values = [[text], [self.ontology_graph_iri]]
+        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
         if self.validate_profile:
             values.append(valid_profiles)
             paths.append(EntityPath(path="profile"))

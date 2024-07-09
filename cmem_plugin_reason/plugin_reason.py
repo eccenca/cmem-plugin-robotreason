@@ -294,9 +294,8 @@ class ReasonPlugin(WorkflowPlugin):
             f"--language-annotation rdfs:comment "
             f'"Reasoning result set of <{self.data_graph_iri}> and '
             f'<{self.ontology_graph_iri}>" en '
-            f'--link-annotation prov:wasDerivedFrom "{self.data_graph_iri}" '
-            f"--link-annotation prov:wasDerivedFrom "
-            f'"{self.ontology_graph_iri}" '
+            f'--link-annotation dc:source "{self.data_graph_iri}" '
+            f'--link-annotation dc:source "{self.ontology_graph_iri}" '
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )

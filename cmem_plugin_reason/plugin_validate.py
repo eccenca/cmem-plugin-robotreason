@@ -156,7 +156,7 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--language-annotation rdfs:label "Ontology Validation Result {utctime}" en '
                 f"--language-annotation rdfs:comment "
                 f'"Ontology validation of <{self.ontology_graph_iri}>" en '
-                f'--link-annotation prov:wasDerivedFrom "{self.ontology_graph_iri}" '
+                f'--link-annotation dc:source "{self.ontology_graph_iri}" '
                 f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
                 f'--output "{self.temp}/output.ttl"'
             )

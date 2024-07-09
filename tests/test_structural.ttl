@@ -4,14 +4,14 @@
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dc: <http://purl.org/dc/terms/> .
 @prefix vocab: <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/> .
 @base <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/result/> .
 
 <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/result/> rdf:type owl:Ontology ;
                                                     owl:imports vocab: ;
                                                     rdfs:comment "Reasoning result set of <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> and <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/>"@en ;
-                                                    prov:wasDerivedFrom
+                                                    dc:source
                 <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/data/> , <https://ns.eccenca.com/reasoning/e02aaed014c94e0c91bf960fed127750/vocab/> .
 
 #################################################################

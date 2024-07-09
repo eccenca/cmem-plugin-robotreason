@@ -7,7 +7,6 @@ import unicodedata
 from collections import OrderedDict
 from pathlib import Path
 from secrets import token_hex
-from shutil import rmtree
 from subprocess import CompletedProcess, run
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -120,14 +119,6 @@ def send_result(iri: str, filepath: Path) -> None:
         replace=True,
         content_type="text/turtle",
     )
-
-
-def remove_temp(plugin: WorkflowPlugin) -> None:
-    """Remove temporary files"""
-    try:
-        rmtree(plugin.temp)
-    except (OSError, FileNotFoundError) as err:
-        plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
 
 
 def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:

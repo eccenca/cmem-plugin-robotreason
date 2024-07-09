@@ -14,3 +14,12 @@
 
 # Ontologies used: 
 - vocab (https://ns.eccenca.com/validateontology/e02aaed014c94e0c91bf960fed127750/vocab)
+
+
+
+# Valid Profiles:
+- Full
+- DL
+- EL
+- QL
+- RL

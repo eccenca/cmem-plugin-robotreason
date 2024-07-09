@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+
+## [1.0.0beta3] 2024-07-09
+
+### Fixed
+
+- temporary files are now removed when an error occurs
+
+### Added
+
+- parameter for validating the input ontology against OWL2 profiles (DL, EL, QL, RL, and Full)
+- Validate plugin outputs valid profiles with path "profile"
+
+### Changed
+
+- Validate plugin outputs the Markdown result with path "markdown"
+
 ## [1.0.0beta2] 2024-07-04
 
 ### Fixed
@@ -27,7 +43,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - complete validation for IRI parameters
 - remove "Annnotate inferred subclass axioms" parameter in Reason plugin
-- new icons
 
 ## [1.0.0alpha3] 2024-06-28
 

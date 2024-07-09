@@ -1,11 +1,9 @@
 """Ontology consistency validation workflow plugin module"""
 
-import shlex
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import run
+from tempfile import TemporaryDirectory
 from time import time
-from uuid import uuid4
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
@@ -29,12 +27,15 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
-    ROBOT,
+    VALIDATE_PROFILES_PARAMETER,
     create_xml_catalog_file,
     get_graphs_tree,
+    get_provenance,
+    post_profiles,
     post_provenance,
-    remove_temp,
+    robot,
     send_result,
+    validate_profiles,
 )
 
 
@@ -51,6 +52,7 @@ from cmem_plugin_reason.utils import (
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
+        VALIDATE_PROFILES_PARAMETER,
         PluginParameter(
             param_type=BoolParameterType(),
             name="write_md",
@@ -100,6 +102,7 @@ class ValidatePlugin(WorkflowPlugin):
         output_graph_iri: str = "",
         write_md: bool = False,
         md_filename: str = "",
+        validate_profile: bool = False,
         stop_at_inconsistencies: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
@@ -125,25 +128,23 @@ class ValidatePlugin(WorkflowPlugin):
         self.write_md = write_md
         self.stop_at_inconsistencies = stop_at_inconsistencies
         self.md_filename = md_filename if write_md else "mdfile.md"
+        self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
-        self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
-        if not Path(self.temp).exists():
-            Path(self.temp).mkdir(parents=True)
         for graph in graphs:
+            self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
 
-    def validate(self, graphs: dict) -> None:
+    def explain(self, graphs: dict) -> None:
         """Reason"""
         data_location = f"{self.temp}/{graphs[self.ontology_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
 
         cmd = (
-            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
             f'merge --input "{data_location}" '
             f"explain --reasoner {self.reasoner} -M inconsistency "
             f'--explanation "{self.temp}/{self.md_filename}"'
@@ -160,7 +161,7 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--output "{self.temp}/output.ttl"'
             )
 
-        response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+        response = robot(cmd, self.max_ram_percentage)
         if response.returncode != 0:
             if response.stdout:
                 raise OSError(response.stdout.decode())
@@ -177,38 +178,66 @@ class ValidatePlugin(WorkflowPlugin):
             replace=True,
         )
 
-    def execute(self, inputs: tuple, context: ExecutionContext) -> Entities | None:  # noqa: ARG002
+    def add_profiles(self, valid_profiles: list) -> list:
+        """Add profile validation result to output"""
+        with (Path(self.temp) / self.md_filename).open("a") as mdfile:
+            mdfile.write("\n\n\n# Valid Profiles:\n")
+            if valid_profiles:
+                profiles_str = "\n- ".join(valid_profiles)
+                mdfile.write(f"- {profiles_str}\n")
+        if self.produce_graph:
+            post_profiles(self, valid_profiles)
+        return valid_profiles
+
+    def make_entities(self, text: str, valid_profiles: list) -> Entities:
+        """Make entities"""
+        values = [[text]]
+        paths = [EntityPath(path="markdown")]
+        if self.validate_profile:
+            values.append(valid_profiles)
+            paths.append(EntityPath(path="profile"))
+        entities = [
+            Entity(
+                uri="https://eccenca.com/plugin_validateontology/result",
+                values=values,
+            ),
+        ]
+        schema = EntitySchema(
+            type_uri="https://eccenca.com/plugin_validateontology/type",
+            paths=paths,
+        )
+        return Entities(entities=entities, schema=schema)
+
+    def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.ontology_graph_iri,))
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
-        self.validate(graphs)
+        self.explain(graphs)
 
         if self.produce_graph:
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
             setup_cmempy_user_access(context.user)
-            post_provenance(self, context)
+            post_provenance(self, get_provenance(self, context))
+
+        valid_profiles = (
+            self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else []
+        )
 
         if self.write_md:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
-        text = (Path(self.temp) / self.md_filename).read_text()
 
-        remove_temp(self)
+        text = (Path(self.temp) / self.md_filename).read_text()
 
         if self.stop_at_inconsistencies and text != "No explanations found.":
             raise RuntimeError("Inconsistencies found in Ontology.")
 
-        entities = [
-            Entity(
-                uri="https://eccenca.com/plugin_validateontology/md",
-                values=[[text]],
-            )
-        ]
-        schema = EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/text",
-            paths=[EntityPath(path="text")],
-        )
-        return Entities(entities=iter(entities), schema=schema)
+        return self.make_entities(text, valid_profiles)
+
+    def execute(self, inputs: tuple, context: ExecutionContext) -> Entities:  # noqa: ARG002
+        """Remove temp files on error"""
+        with TemporaryDirectory() as self.temp:
+            return self._execute(context)

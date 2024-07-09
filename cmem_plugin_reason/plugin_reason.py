@@ -1,11 +1,9 @@
 """Reasoning workflow plugin module"""
 
-import shlex
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import run
+from tempfile import TemporaryDirectory
 from time import time
-from uuid import uuid4
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
@@ -22,12 +20,16 @@ from cmem_plugin_reason.utils import (
     ONTOLOGY_GRAPH_IRI_PARAMETER,
     REASONER_PARAMETER,
     REASONERS,
-    ROBOT,
+    VALIDATE_PROFILES_PARAMETER,
     create_xml_catalog_file,
     get_graphs_tree,
+    get_provenance,
+    post_profiles,
     post_provenance,
     remove_temp,
+    robot,
     send_result,
+    validate_profiles,
 )
 
 
@@ -41,6 +43,7 @@ from cmem_plugin_reason.utils import (
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
+        VALIDATE_PROFILES_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
         PluginParameter(
             param_type=GraphParameterType(
@@ -184,6 +187,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_class: bool = True,
         sub_data_property: bool = False,
         sub_object_property: bool = False,
+        validate_profile: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -239,14 +243,13 @@ class ReasonPlugin(WorkflowPlugin):
         self.ontology_graph_iri = ontology_graph_iri
         self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
+        self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
-        self.temp = f"reason_{uuid4().hex}"
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
-        if not Path(self.temp).exists():
-            Path(self.temp).mkdir(parents=True)
         for graph in graphs:
+            self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
                 file.write(get(graph).text)
@@ -262,7 +265,6 @@ class ReasonPlugin(WorkflowPlugin):
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f"java -XX:MaxRAMPercentage={self.max_ram_percentage} -jar {ROBOT} "
             f'merge --input "{data_location}" '
             "--collapse-import-closure false "
             f"reason --reasoner {self.reasoner} "
@@ -286,7 +288,7 @@ class ReasonPlugin(WorkflowPlugin):
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )
-        response = run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
+        response = robot(cmd, self.max_ram_percentage)
         if response.returncode != 0:
             if response.stdout:
                 raise OSError(response.stdout.decode())
@@ -294,8 +296,8 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
-        """Execute plugin"""
+    def _execute(self, context: ExecutionContext) -> None:
+        """`Execute plugin"""
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
         self.get_graphs(graphs, context)
@@ -303,5 +305,12 @@ class ReasonPlugin(WorkflowPlugin):
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
         send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
-        post_provenance(self, context)
+        if self.validate_profile:
+            post_profiles(self, validate_profiles(self, graphs))
+        post_provenance(self, get_provenance(self, context))
         remove_temp(self)
+
+    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
+        """Remove temp files on error"""
+        with TemporaryDirectory() as self.temp:
+            self._execute(context)

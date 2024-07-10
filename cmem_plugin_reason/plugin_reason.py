@@ -167,8 +167,9 @@ from cmem_plugin_reason.utils import (
             param_type=BoolParameterType(),
             name="input_profiles",
             label="Process valid OWL profiles from input",
-            description="""If the "validate OWL profiles" is enabled, take values from the input on
-            path "profile" instead of running the validation in the plugin.""",
+            description="""If the "validate OWL profiles" parameter is enabled, take values from the
+            input (paths "profile" and "ontology") instead of running the validation in the plugin.
+            """,
             default_value=False,
             advanced=True,
         ),

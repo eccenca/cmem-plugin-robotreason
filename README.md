@@ -86,6 +86,14 @@ parameters to include inferred axiom generators:
 
 Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full). The ontology is annotated in the output graph. 
 
+### Process valid OWL profiles from input
+
+If enabled along with the "Validate OWL2 profiles" parameter, the list of valid profiles is taken from the plugin input, 
+without validating the ontology against the profiles in the plugin. The inputs need to include the entity paths "profile"
+for the valid profiles, and "ontology" for the ontology IRI. If the "Validate OWL2 profiles" parameter is enabled in the
+"Validate" plugin, it can be directly connected to the input of the "Reason" plugin.
+
+
 ### Maximum RAM Percentage
 
 Maximum heap size for the Java virtual machine in the DI container running the reasoning process.
@@ -138,7 +146,8 @@ Raise an error if inconsistencies are found. If enabled, the plugin does not out
 ### Validate OWL2 profiles
 
 Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full). The valid profiles are added to the output 
-Markdown file and the ontology is annotated in the output graph. The plugin outputs the profiles using the path "profile". 
+Markdown file and the ontology is annotated in the output graph. The plugin outputs the profiles with path "profile",
+and the ontology IRI with path "ontology".
 
 ### Maximum RAM Percentage
 

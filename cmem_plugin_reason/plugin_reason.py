@@ -36,7 +36,7 @@ from cmem_plugin_reason.utils import (
 
 @Plugin(
     label="Reason",
-    icon=Icon(file_name="reason.png", package=__package__),
+    icon=Icon(file_name="fluent--brain-circuit-24-regular.svg", package=__package__),
     description="Performs OWL reasoning.",
     documentation="""A task performing OWL reasoning. With an OWL ontology and a data graph as input
     the reasoning result is written to a specified graph. The following reasoners are supported:

@@ -47,7 +47,7 @@ from cmem_plugin_reason.utils import (
     Markdown file and/or to a specified graph. The Markdown string is also provided as an output
     entity using the path "text". The following reasoners are supported: ELK, Expression
     Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
-    icon=Icon(package=__package__, file_name="validate.png"),
+    icon=Icon(file_name="file-icons--owl.svg", package=__package__),
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,

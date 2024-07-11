@@ -40,7 +40,7 @@ from cmem_plugin_reason.utils import (
 
 
 @Plugin(
-    label="Validate",
+    label="Validate OWL consistency",
     description="Validates the consistency of an OWL ontology.",
     documentation="""A task validating the consistency of an OWL ontology and generating an
     explanation if inconsistencies are found. The explanation can be written to the project as a

@@ -8,11 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ### Added
 
-- valid OWL profiles can be read on the input instead of validating the ontology in the plugin
+- valid OWL profiles can be read on the Reason plugin input instead of validating the ontology in the plugin
 
 ### Changed
 
 - use DCMI Metadata Terms for provenance
+- new icons
 
 ## [1.0.0beta3] 2024-07-09
 

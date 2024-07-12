@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - valid OWL profiles can be read on the Reason plugin input instead of validating the ontology in the plugin
 
+### Fixed
+
+- fixed errors on CMEM instances with self-signed/invalid certificates
+
 ### Changed
 
 - use DCMI Metadata Terms for provenance

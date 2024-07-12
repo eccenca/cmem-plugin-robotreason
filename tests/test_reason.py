@@ -101,7 +101,7 @@ def tests(_setup: None) -> None:  # noqa: C901
         if next(iter(result.entities)).values[0][0] != md_test:  # type: ignore[union-attr]
             val_errors += 'EntityPath "markdown" output error. '
 
-        if next(iter(result.entities)).values[1] != ["Full", "DL", "EL", "QL", "RL"]:  # type: ignore[union-attr]
+        if next(iter(result.entities)).values[2] != ["Full", "DL", "EL", "QL", "RL"]:  # type: ignore[union-attr]
             val_errors += 'EntityPath "profile" output error. '
 
         if md_test != get_resource(PROJECT_ID, MD_FILENAME).decode():

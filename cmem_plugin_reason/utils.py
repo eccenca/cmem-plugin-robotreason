@@ -1,13 +1,10 @@
 """Common constants and functions"""
 
 import json
-import re
 import shlex
-import unicodedata
 from collections import OrderedDict
 from pathlib import Path
 from secrets import token_hex
-from shutil import rmtree
 from subprocess import CompletedProcess, run
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -71,16 +68,6 @@ VALIDATE_PROFILES_PARAMETER = PluginParameter(
 )
 
 
-def convert_iri_to_filename(value: str) -> str:
-    """Convert IRI to filename"""
-    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
-    value = re.sub(r"\.", "_", value.lower())
-    value = re.sub(r"/", "_", value.lower())
-    value = re.sub(r"[^\w\s-]", "", value.lower())
-    value = re.sub(r"[-\s]+", "-", value).strip("-_")
-    return value + ".nt"
-
-
 def create_xml_catalog_file(dir_: str, graphs: dict) -> None:
     """Create XML catalog file"""
     file_name = Path(dir_) / "catalog-v001.xml"
@@ -103,12 +90,12 @@ def get_graphs_tree(graph_iris: tuple) -> dict:
     graphs = {}
     for graph_iri in graph_iris:
         if graph_iri not in graphs:
-            graphs[graph_iri] = convert_iri_to_filename(graph_iri)
+            graphs[graph_iri] = f"{token_hex(8)}.nt"
             tree = get_graph_import_tree(graph_iri)
             for value in tree["tree"].values():
                 for iri in value:
                     if iri not in graphs:
-                        graphs[iri] = convert_iri_to_filename(iri)
+                        graphs[iri] = f"{token_hex(8)}.nt"
     return graphs
 
 
@@ -122,14 +109,6 @@ def send_result(iri: str, filepath: Path) -> None:
     )
 
 
-def remove_temp(plugin: WorkflowPlugin) -> None:
-    """Remove temporary files"""
-    try:
-        rmtree(plugin.temp)
-    except (OSError, FileNotFoundError) as err:
-        plugin.log.warning(f"Cannot remove directory {plugin.temp} ({err})")
-
-
 def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
     """Post provenance"""
     if not prov:
@@ -141,7 +120,7 @@ def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
     insert_query = f"""
         INSERT DATA {{
             GRAPH <{plugin.output_graph_iri}> {{
-                <{plugin.output_graph_iri}> <http://www.w3.org/ns/prov#wasGeneratedBy>
+                <{plugin.output_graph_iri}> <http://purl.org/dc/terms/creator>
                     <{prov["plugin_iri"]}> .
                 <{prov["plugin_iri"]}> a <{prov["plugin_type"]}>,
                     <https://vocab.eccenca.com/di/CustomTask> .

@@ -1,6 +1,7 @@
 """Ontology consistency validation workflow plugin module"""
 
 from datetime import UTC, datetime
+from os import environ
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import time
@@ -38,16 +39,18 @@ from cmem_plugin_reason.utils import (
     validate_profiles,
 )
 
+environ["SSL_VERIFY"] = "false"
+
 
 @Plugin(
-    label="Validate",
+    label="Validate OWL consistency",
     description="Validates the consistency of an OWL ontology.",
     documentation="""A task validating the consistency of an OWL ontology and generating an
     explanation if inconsistencies are found. The explanation can be written to the project as a
     Markdown file and/or to a specified graph. The Markdown string is also provided as an output
     entity using the path "text". The following reasoners are supported: ELK, Expression
     Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
-    icon=Icon(package=__package__, file_name="validate.png"),
+    icon=Icon(file_name="file-icons--owl.svg", package=__package__),
     parameters=[
         REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
@@ -156,7 +159,7 @@ class ValidatePlugin(WorkflowPlugin):
                 f'--language-annotation rdfs:label "Ontology Validation Result {utctime}" en '
                 f"--language-annotation rdfs:comment "
                 f'"Ontology validation of <{self.ontology_graph_iri}>" en '
-                f'--link-annotation prov:wasDerivedFrom "{self.ontology_graph_iri}" '
+                f'--link-annotation dc:source "{self.ontology_graph_iri}" '
                 f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
                 f'--output "{self.temp}/output.ttl"'
             )
@@ -191,8 +194,8 @@ class ValidatePlugin(WorkflowPlugin):
 
     def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
-        values = [[text]]
-        paths = [EntityPath(path="markdown")]
+        values = [[text], [self.ontology_graph_iri]]
+        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
         if self.validate_profile:
             values.append(valid_profiles)
             paths.append(EntityPath(path="profile"))

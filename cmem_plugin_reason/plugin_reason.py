@@ -1,6 +1,8 @@
 """Reasoning workflow plugin module"""
 
+from collections.abc import Sequence
 from datetime import UTC, datetime
+from os import environ
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import time
@@ -9,6 +11,7 @@ import validators.url
 from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
+from cmem_plugin_base.dataintegration.entity import Entities
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
@@ -26,16 +29,17 @@ from cmem_plugin_reason.utils import (
     get_provenance,
     post_profiles,
     post_provenance,
-    remove_temp,
     robot,
     send_result,
     validate_profiles,
 )
 
+environ["SSL_VERIFY"] = "false"
+
 
 @Plugin(
     label="Reason",
-    icon=Icon(file_name="reason.png", package=__package__),
+    icon=Icon(file_name="fluent--brain-circuit-24-regular.svg", package=__package__),
     description="Performs OWL reasoning.",
     documentation="""A task performing OWL reasoning. With an OWL ontology and a data graph as input
     the reasoning result is written to a specified graph. The following reasoners are supported:
@@ -162,6 +166,16 @@ from cmem_plugin_reason.utils import (
             description="",
             default_value=False,
         ),
+        PluginParameter(
+            param_type=BoolParameterType(),
+            name="input_profiles",
+            label="Process valid OWL profiles from input",
+            description="""If the "validate OWL profiles" parameter is enabled, take values from the
+            input (paths "profile" and "ontology") instead of running the validation in the plugin.
+            """,
+            default_value=False,
+            advanced=True,
+        ),
     ],
 )
 class ReasonPlugin(WorkflowPlugin):
@@ -188,6 +202,7 @@ class ReasonPlugin(WorkflowPlugin):
         sub_data_property: bool = False,
         sub_object_property: bool = False,
         validate_profile: bool = False,
+        input_profiles: bool = False,
         max_ram_percentage: int = MAX_RAM_PERCENTAGE_DEFAULT,
     ) -> None:
         self.axioms = {
@@ -244,6 +259,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.output_graph_iri = output_graph_iri
         self.reasoner = reasoner
         self.validate_profile = validate_profile
+        self.input_profiles = input_profiles
         self.max_ram_percentage = max_ram_percentage
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
@@ -282,9 +298,8 @@ class ReasonPlugin(WorkflowPlugin):
             f"--language-annotation rdfs:comment "
             f'"Reasoning result set of <{self.data_graph_iri}> and '
             f'<{self.ontology_graph_iri}>" en '
-            f'--link-annotation prov:wasDerivedFrom "{self.data_graph_iri}" '
-            f"--link-annotation prov:wasDerivedFrom "
-            f'"{self.ontology_graph_iri}" '
+            f'--link-annotation dc:source "{self.data_graph_iri}" '
+            f'--link-annotation dc:source "{self.ontology_graph_iri}" '
             f'--typed-annotation dc:created "{utctime}" xsd:dateTime '
             f'--output "{self.temp}/result.ttl"'
         )
@@ -296,8 +311,32 @@ class ReasonPlugin(WorkflowPlugin):
                 raise OSError(response.stderr.decode())
             raise OSError("ROBOT error")
 
-    def _execute(self, context: ExecutionContext) -> None:
+    def post_valid_profiles(self, inputs: Sequence[Entities], graphs: dict) -> None:
+        """Post valid profiles. Optionally get valid profiles from input."""
+        if self.input_profiles:
+            values = next(inputs[0].entities).values
+            paths = [p.path for p in inputs[0].schema.paths]
+            validated_ontology = values[paths.index("ontology")][0]
+            valid_profiles = values[paths.index("profile")]
+            if validated_ontology != self.ontology_graph_iri:
+                raise ValueError(
+                    "The ontology IRI validated with Validate differs from the input ontology IRI."
+                )
+        else:
+            valid_profiles = validate_profiles(self, graphs)
+        post_profiles(self, valid_profiles)
+
+    def _execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """`Execute plugin"""
+        if self.input_profiles:
+            if not inputs:
+                raise OSError(
+                    'Input entities needed if "Process valid OWL profiles from input" is enabled'
+                )
+            paths = [p.path for p in inputs[0].schema.paths]
+            if "profile" not in paths or "ontology" not in paths:
+                raise ValueError("Invalid input for processing OWL profiles")
+
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
         self.get_graphs(graphs, context)
@@ -306,11 +345,10 @@ class ReasonPlugin(WorkflowPlugin):
         setup_cmempy_user_access(context.user)
         send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
         if self.validate_profile:
-            post_profiles(self, validate_profiles(self, graphs))
+            self.post_valid_profiles(inputs, graphs)
         post_provenance(self, get_provenance(self, context))
-        remove_temp(self)
 
-    def execute(self, inputs: tuple, context: ExecutionContext) -> None:  # noqa: ARG002
+    def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """Remove temp files on error"""
         with TemporaryDirectory() as self.temp:
-            self._execute(context)
+            self._execute(inputs, context)

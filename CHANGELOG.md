@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/)
 
+## [1.0.0beta4] 2024-07-12
+
+### Fixed
+
+- fixed errors on CMEM instances with self-signed/invalid certificates
+
+### Added
+
+- valid OWL profiles can be read on the Reason plugin input instead of validating the ontology in the plugin
+
+### Changed
+
+- use DCMI Metadata Terms for provenance
+- new icons
 
 ## [1.0.0beta3] 2024-07-09
 

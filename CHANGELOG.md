@@ -6,13 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [1.0.0rc1] 2024-07-12
 
-### Added
-
-- valid OWL profiles can be read on the Reason plugin input instead of validating the ontology in the plugin
-
 ### Fixed
 
 - fixed errors on CMEM instances with self-signed/invalid certificates
+
+### Added
+
+- valid OWL profiles can be read on the Reason plugin input instead of validating the ontology in the plugin
 
 ### Changed
 

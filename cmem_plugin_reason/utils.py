@@ -101,12 +101,14 @@ def get_graphs_tree(graph_iris: tuple) -> dict:
 
 def send_result(iri: str, filepath: Path) -> None:
     """Send result"""
-    post_streamed(
+    res = post_streamed(
         iri,
         str(filepath),
         replace=True,
         content_type="text/turtle",
     )
+    if res.status_code != 204:  # noqa: PLR2004
+        raise OSError(f"Error posting result graph (status code {res.status_code}).")
 
 
 def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
@@ -116,7 +118,6 @@ def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
     param_sparql = ""
     for name, iri in prov["parameters"].items():
         param_sparql += f'\n<{prov["plugin_iri"]}> <{iri}> "{plugin.__dict__[name]}" .'
-
     insert_query = f"""
         INSERT DATA {{
             GRAPH <{plugin.output_graph_iri}> {{
@@ -130,7 +131,6 @@ def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
             }}
         }}
     """
-
     post_update(query=insert_query)
 
 
@@ -169,13 +169,13 @@ def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | 
     )
 
     parameter_query = f"""
-            SELECT ?parameter {{
-                GRAPH <{project_graph}> {{
-                    <{plugin_iri}> ?parameter ?o .
-                    FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
-                }}
+        SELECT ?parameter {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> ?parameter ?o .
+                FILTER(STRSTARTS(STR(?parameter), "https://vocab.eccenca.com/di/functions/param_"))
             }}
-        """
+        }}
+    """
 
     new_plugin_iri = f'{"_".join(plugin_iri.split("_")[:-1])}_{token_hex(8)}'
     result = json.loads(post_select(query=parameter_query))

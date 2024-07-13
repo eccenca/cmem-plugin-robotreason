@@ -221,7 +221,7 @@ class ValidatePlugin(WorkflowPlugin):
 
         if self.produce_graph:
             setup_cmempy_user_access(context.user)
-            send_result(self, self.output_graph_iri, Path(self.temp) / "output.ttl")
+            send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
             setup_cmempy_user_access(context.user)
             post_provenance(self, get_provenance(self, context))
 

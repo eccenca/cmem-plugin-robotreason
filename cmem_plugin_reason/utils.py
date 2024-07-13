@@ -99,7 +99,7 @@ def get_graphs_tree(graph_iris: tuple) -> dict:
     return graphs
 
 
-def send_result(plugin: WorkflowPlugin, iri: str, filepath: Path) -> None:
+def send_result(iri: str, filepath: Path) -> None:
     """Send result"""
     res = post_streamed(
         iri,
@@ -108,7 +108,7 @@ def send_result(plugin: WorkflowPlugin, iri: str, filepath: Path) -> None:
         content_type="text/turtle",
     )
     if res.status_code != 204:  # noqa: PLR2004
-        plugin.log.error("Error posting result graph.")
+        raise OSError(f"Error posting result graph (status code {res.status_code}).")
 
 
 def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:

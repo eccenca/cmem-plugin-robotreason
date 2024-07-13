@@ -343,7 +343,7 @@ class ReasonPlugin(WorkflowPlugin):
         create_xml_catalog_file(self.temp, graphs)
         self.reason(graphs)
         setup_cmempy_user_access(context.user)
-        send_result(self.output_graph_iri, Path(self.temp) / "result.ttl")
+        send_result(self, self.output_graph_iri, Path(self.temp) / "result.ttl")
         if self.validate_profile:
             self.post_valid_profiles(inputs, graphs)
         post_provenance(self, get_provenance(self, context))

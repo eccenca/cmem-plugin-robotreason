@@ -5,6 +5,7 @@ from os import environ
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import time
+from warnings import simplefilter
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
@@ -21,6 +22,7 @@ from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from pathvalidate import is_valid_filename
+from urllib3.exceptions import InsecureRequestWarning
 
 from cmem_plugin_reason.utils import (
     MAX_RAM_PERCENTAGE_DEFAULT,
@@ -40,6 +42,7 @@ from cmem_plugin_reason.utils import (
 )
 
 environ["SSL_VERIFY"] = "false"
+simplefilter("ignore", category=InsecureRequestWarning)
 
 
 @Plugin(

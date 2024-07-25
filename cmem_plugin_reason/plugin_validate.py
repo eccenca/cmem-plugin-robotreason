@@ -111,7 +111,12 @@ class ValidatePlugin(WorkflowPlugin):
         self.reasoner = reasoner
         self.output_graph_iri = output_graph_iri
         self.stop_at_inconsistencies = stop_at_inconsistencies
-        self.md_filename = md_filename if md_filename else "mdfile.md"
+        if md_filename:
+            self.md_filename = md_filename
+            self.write_md = True
+        else:
+            self.md_filename = "mdfile.md"
+            self.write_md = False
         self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
 
@@ -218,8 +223,7 @@ class ValidatePlugin(WorkflowPlugin):
             self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else []
         )
 
-        # if self.write_md:
-        if self.md_filename:
+        if self.write_md:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
 

@@ -198,7 +198,7 @@ def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | 
 def robot(cmd: str, max_ram_percentage: int) -> CompletedProcess:
     """Run robot.jar"""
     jar = Path(__path__[0]) / "bin" / "robot.jar"
-    cmd = f"java -XX:MaxRAMPercentage={max_ram_percentage} -jar {jar} " + cmd
+    cmd = f"java -XX:MaxRAMPercentage={max_ram_percentage} -jar {jar} {cmd}"
     return run(shlex.split(cmd), check=False, capture_output=True)  # noqa: S603
 
 

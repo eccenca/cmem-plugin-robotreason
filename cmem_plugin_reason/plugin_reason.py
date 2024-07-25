@@ -333,27 +333,13 @@ class ReasonPlugin(WorkflowPlugin):
         if self.input_profiles:
             values = next(inputs[0].entities).values
             paths = [p.path for p in inputs[0].schema.paths]
-            validated_ontology = values[paths.index("ontology")][0]
             valid_profiles = values[paths.index("profile")]
-            if validated_ontology != self.ontology_graph_iri:
-                raise ValueError(
-                    "The ontology IRI validated with Validate differs from the input ontology IRI."
-                )
         else:
             valid_profiles = validate_profiles(self, graphs)
         post_profiles(self, valid_profiles)
 
     def _execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """`Execute plugin"""
-        if self.input_profiles:
-            if not inputs:
-                raise OSError(
-                    'Input entities needed if "Process valid OWL profiles from input" is enabled'
-                )
-            paths = [p.path for p in inputs[0].schema.paths]
-            if "profile" not in paths or "ontology" not in paths:
-                raise ValueError("Invalid input for processing OWL profiles")
-
         setup_cmempy_user_access(context.user)
         graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
         self.get_graphs(graphs, context)
@@ -366,6 +352,19 @@ class ReasonPlugin(WorkflowPlugin):
         post_provenance(self, get_provenance(self, context))
 
     def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
-        """Remove temp files on error"""
+        """Validate input, execute plugin with temporary directory"""
+        if self.input_profiles:
+            values = next(inputs[0].entities).values
+            paths = [p.path for p in inputs[0].schema.paths]
+            if not inputs:
+                raise OSError(
+                    'Input entities needed if "Process valid OWL profiles from input" is enabled'
+                )
+            if "profile" not in paths or "ontology" not in paths:
+                raise ValueError("Invalid input for processing OWL profiles")
+            if values[paths.index("ontology")][0] != self.ontology_graph_iri:
+                raise ValueError(
+                    "The ontology IRI validated with Validate differs from the input ontology IRI."
+                )
         with TemporaryDirectory() as self.temp:
             self._execute(inputs, context)

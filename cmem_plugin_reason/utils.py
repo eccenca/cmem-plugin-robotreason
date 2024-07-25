@@ -45,7 +45,7 @@ REASONER_PARAMETER = PluginParameter(
     name="reasoner",
     label="Reasoner",
     description="Reasoner option.",
-    default_value="elk",
+    default_value="",
 )
 
 MAX_RAM_PERCENTAGE_PARAMETER = PluginParameter(

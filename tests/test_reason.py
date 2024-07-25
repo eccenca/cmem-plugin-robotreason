@@ -88,9 +88,7 @@ def tests(_setup: None) -> None:  # noqa: C901
     def test_validate(errors: str) -> str:
         result = ValidatePlugin(
             ontology_graph_iri=VALIDATE_ONTOLOGY_GRAPH_IRI,
-            produce_graph=True,
             output_graph_iri=OUTPUT_GRAPH_IRI,
-            write_md=True,
             validate_profile=True,
             md_filename=MD_FILENAME,
         ).execute((), context=TestExecutionContext(PROJECT_ID))

@@ -12,13 +12,9 @@ from cmem.cmempy.dp.proxy.graph import get
 from cmem.cmempy.workspace.projects.resources.resource import create_resource
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
-from cmem_plugin_base.dataintegration.entity import (
-    Entities,
-    Entity,
-    EntityPath,
-    EntitySchema,
-)
+from cmem_plugin_base.dataintegration.entity import Entities, Entity, EntityPath, EntitySchema
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
+from cmem_plugin_base.dataintegration.ports import FixedNumberOfInputs, FixedSchemaPort
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from pathvalidate import is_valid_filename
@@ -60,20 +56,6 @@ simplefilter("ignore", category=InsecureRequestWarning)
         MAX_RAM_PERCENTAGE_PARAMETER,
         VALIDATE_PROFILES_PARAMETER,
         PluginParameter(
-            param_type=BoolParameterType(),
-            name="write_md",
-            label="Write Markdown explanation file",
-            description="Write Markdown file with explanation to project.",
-            default_value=False,
-        ),
-        PluginParameter(
-            param_type=BoolParameterType(),
-            name="produce_graph",
-            label="Produce output graph",
-            description="Produce explanation graph.",
-            default_value=False,
-        ),
-        PluginParameter(
             param_type=StringParameterType(),
             name="output_graph_iri",
             label="Output graph IRI",
@@ -104,9 +86,7 @@ class ValidatePlugin(WorkflowPlugin):
         self,
         ontology_graph_iri: str = "",
         reasoner: str = "elk",
-        produce_graph: bool = False,
         output_graph_iri: str = "",
-        write_md: bool = False,
         md_filename: str = "",
         validate_profile: bool = False,
         stop_at_inconsistencies: bool = False,
@@ -115,13 +95,13 @@ class ValidatePlugin(WorkflowPlugin):
         errors = ""
         if not validators.url(ontology_graph_iri):
             errors += 'Invalid IRI for parameter "Ontology graph IRI." '
-        if produce_graph and not validators.url(output_graph_iri):
+        if output_graph_iri and not validators.url(output_graph_iri):
             errors += 'Invalid IRI for parameter "Output graph IRI". '
-        if produce_graph and output_graph_iri == ontology_graph_iri:
+        if output_graph_iri and output_graph_iri == ontology_graph_iri:
             errors += "Output graph IRI cannot be the same as the Ontology graph IRI. "
         if reasoner not in REASONERS:
             errors += 'Invalid value for parameter "Reasoner". '
-        if write_md and not is_valid_filename(md_filename):
+        if md_filename and not is_valid_filename(md_filename):
             errors += 'Invalid filename for parameter "Output filename". '
         if max_ram_percentage not in range(1, 101):
             errors += 'Invalid value for parameter "Maximum RAM Percentage". '
@@ -129,13 +109,15 @@ class ValidatePlugin(WorkflowPlugin):
             raise ValueError(errors[:-1])
         self.ontology_graph_iri = ontology_graph_iri
         self.reasoner = reasoner
-        self.produce_graph = produce_graph
         self.output_graph_iri = output_graph_iri
-        self.write_md = write_md
         self.stop_at_inconsistencies = stop_at_inconsistencies
-        self.md_filename = md_filename if write_md else "mdfile.md"
+        self.md_filename = md_filename if md_filename else "mdfile.md"
         self.validate_profile = validate_profile
         self.max_ram_percentage = max_ram_percentage
+
+        self.input_ports = FixedNumberOfInputs([])
+        self.schema = self.generate_output_schema()
+        self.output_port = FixedSchemaPort(self.schema)
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
@@ -156,7 +138,7 @@ class ValidatePlugin(WorkflowPlugin):
             f'--explanation "{self.temp}/{self.md_filename}"'
         )
 
-        if self.produce_graph:
+        if self.output_graph_iri:
             cmd += (
                 f' annotate --ontology-iri "{self.output_graph_iri}" '
                 f'--language-annotation rdfs:label "Ontology Validation Result {utctime}" en '
@@ -191,28 +173,32 @@ class ValidatePlugin(WorkflowPlugin):
             if valid_profiles:
                 profiles_str = "\n- ".join(valid_profiles)
                 mdfile.write(f"- {profiles_str}\n")
-        if self.produce_graph:
+        if self.output_graph_iri:
             post_profiles(self, valid_profiles)
         return valid_profiles
+
+    def generate_output_schema(self) -> EntitySchema:
+        """Generate the output schema."""
+        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
+        if self.validate_profile:
+            paths.append(EntityPath(path="profile"))
+        return EntitySchema(
+            type_uri="https://eccenca.com/plugin_validateontology/type",
+            paths=paths,
+        )
 
     def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
         values = [[text], [self.ontology_graph_iri]]
-        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
         if self.validate_profile:
             values.append(valid_profiles)
-            paths.append(EntityPath(path="profile"))
         entities = [
             Entity(
                 uri="https://eccenca.com/plugin_validateontology/result",
                 values=values,
             ),
         ]
-        schema = EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/type",
-            paths=paths,
-        )
-        return Entities(entities=entities, schema=schema)
+        return Entities(entities=entities, schema=self.schema)
 
     def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""
@@ -222,7 +208,7 @@ class ValidatePlugin(WorkflowPlugin):
         create_xml_catalog_file(self.temp, graphs)
         self.explain(graphs)
 
-        if self.produce_graph:
+        if self.output_graph_iri:
             setup_cmempy_user_access(context.user)
             send_result(self.output_graph_iri, Path(self.temp) / "output.ttl")
             setup_cmempy_user_access(context.user)
@@ -232,7 +218,8 @@ class ValidatePlugin(WorkflowPlugin):
             self.add_profiles(validate_profiles(self, graphs)) if self.validate_profile else []
         )
 
-        if self.write_md:
+        # if self.write_md:
+        if self.md_filename:
             setup_cmempy_user_access(context.user)
             self.make_resource(context)
 

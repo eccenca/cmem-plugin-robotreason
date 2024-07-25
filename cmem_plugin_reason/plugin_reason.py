@@ -12,9 +12,10 @@ import validators.url
 from cmem.cmempy.dp.proxy.graph import get
 from cmem_plugin_base.dataintegration.context import ExecutionContext
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
-from cmem_plugin_base.dataintegration.entity import Entities
+from cmem_plugin_base.dataintegration.entity import Entities, EntityPath, EntitySchema
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
+from cmem_plugin_base.dataintegration.ports import FixedNumberOfInputs, FixedSchemaPort
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from urllib3.exceptions import InsecureRequestWarning
@@ -184,12 +185,12 @@ simplefilter("ignore", category=InsecureRequestWarning)
 class ReasonPlugin(WorkflowPlugin):
     """Reason plugin"""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, C901
         self,
         data_graph_iri: str = "",
         ontology_graph_iri: str = "",
         output_graph_iri: str = "",
-        reasoner: str = "elk",
+        reasoner: str = "",
         class_assertion: bool = False,
         data_property_characteristic: bool = False,
         disjoint_classes: bool = False,
@@ -264,6 +265,19 @@ class ReasonPlugin(WorkflowPlugin):
         self.validate_profile = validate_profile
         self.input_profiles = input_profiles
         self.max_ram_percentage = max_ram_percentage
+
+        if input_profiles:
+            self.input_ports = FixedNumberOfInputs([FixedSchemaPort(self.generate_input_schema())])
+        else:
+            self.input_ports = FixedNumberOfInputs([])
+        self.output_port = FixedSchemaPort(EntitySchema(type_uri="", paths=[]))
+
+    def generate_input_schema(self) -> EntitySchema:
+        """Generate the output schema."""
+        return EntitySchema(
+            type_uri="urn:row",
+            paths=[EntityPath(path="profile"), EntityPath(path="ontology")],
+        )
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""

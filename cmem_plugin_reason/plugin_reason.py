@@ -174,9 +174,9 @@ simplefilter("ignore", category=InsecureRequestWarning)
             param_type=BoolParameterType(),
             name="input_profiles",
             label="Process valid OWL profiles from input",
-            description="""If the "validate OWL profiles" parameter is enabled, take values from the
-            input (paths "profile" and "ontology") instead of running the validation in the plugin.
-            """,
+            description="""If the "validate OWL profiles" parameter is enabled, the valid profiles
+            and ontology IRI is taken from the input (paths "profile" and "ontology") instead of
+            running the validation in the plugin.""",
             default_value=False,
             advanced=True,
         ),

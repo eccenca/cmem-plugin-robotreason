@@ -203,7 +203,7 @@ class ValidatePlugin(WorkflowPlugin):
                 values=values,
             ),
         ]
-        return Entities(entities=entities, schema=self.schema)
+        return Entities(entities=iter(entities), schema=self.schema)
 
     def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""
@@ -229,7 +229,7 @@ class ValidatePlugin(WorkflowPlugin):
 
         text = (Path(self.temp) / self.md_filename).read_text()
 
-        if self.stop_at_inconsistencies and text != "No explanations found.":
+        if self.stop_at_inconsistencies and text.split("\n", 1)[0] != "No explanations found.":
             raise RuntimeError("Inconsistencies found in Ontology.")
 
         return self.make_entities(text, valid_profiles)

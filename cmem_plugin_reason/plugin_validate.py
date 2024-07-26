@@ -208,7 +208,7 @@ class ValidatePlugin(WorkflowPlugin):
     def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""
         setup_cmempy_user_access(context.user)
-        graphs = get_graphs_tree((self.ontology_graph_iri,))
+        graphs = get_graphs_tree((self.ontology_graph_iri, self.output_graph_iri))
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
         self.explain(graphs)

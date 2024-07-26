@@ -294,12 +294,25 @@ class ReasonPlugin(WorkflowPlugin):
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
+        # remove_query = f"""
+        # SELECT ?s ?p ?o
+        # WHERE {{
+        #   ?s <http://www.w3.org/2002/07/owl#imports> <{self.output_graph_iri}> .
+        # }}
+        # """
+        # filtered_file = Path(self.temp) / "filtered_triples.owl"
+        # query_file = Path(self.temp) / "remove.rq"
+        # with query_file.open("w") as rqfile:
+        #     rqfile.write(remove_query)
+
         axioms = " ".join(k for k, v in self.axioms.items() if v)
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
             f'merge --input "{data_location}" '
             "--collapse-import-closure false "
+            # f'--query query.sparql {filtered_file} '
+            # f'remove --input "{data_location}" --input {filtered_file} --select "triples" '
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
             f"--include-indirect true "
@@ -341,7 +354,9 @@ class ReasonPlugin(WorkflowPlugin):
     def _execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """`Execute plugin"""
         setup_cmempy_user_access(context.user)
-        graphs = get_graphs_tree((self.data_graph_iri, self.ontology_graph_iri))
+        graphs = get_graphs_tree(
+            (self.data_graph_iri, self.ontology_graph_iri, self.output_graph_iri)
+        )
         self.get_graphs(graphs, context)
         create_xml_catalog_file(self.temp, graphs)
         self.reason(graphs)

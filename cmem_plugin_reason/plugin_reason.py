@@ -270,7 +270,7 @@ class ReasonPlugin(WorkflowPlugin):
             self.input_ports = FixedNumberOfInputs([FixedSchemaPort(self.generate_input_schema())])
         else:
             self.input_ports = FixedNumberOfInputs([])
-        self.output_port = FixedSchemaPort(EntitySchema(type_uri="", paths=[]))
+        self.output_port = None
 
     def generate_input_schema(self) -> EntitySchema:
         """Generate the output schema."""
@@ -354,17 +354,26 @@ class ReasonPlugin(WorkflowPlugin):
     def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """Validate input, execute plugin with temporary directory"""
         if self.input_profiles:
+            errors = ""
             values = next(inputs[0].entities).values
             paths = [p.path for p in inputs[0].schema.paths]
             if not inputs:
                 raise OSError(
                     'Input entities needed if "Process valid OWL profiles from input" is enabled'
                 )
-            if "profile" not in paths or "ontology" not in paths:
-                raise ValueError("Invalid input for processing OWL profiles")
-            if values[paths.index("ontology")][0] != self.ontology_graph_iri:
-                raise ValueError(
-                    "The ontology IRI validated with Validate differs from the input ontology IRI."
-                )
+            if "profile" not in paths:
+                errors += 'No value for "profile" given on input. '
+            if "ontology" not in paths:
+                errors += 'No value for "ontology" given on input. '
+            self.ontology_graph_iri = values[paths.index("ontology")][0]
+            if not validators.url(self.ontology_graph_iri):
+                errors += 'Invalid IRI for parameter "Ontology graph IRI". '
+            if self.ontology_graph_iri == self.data_graph_iri:
+                errors += "Ontology graph IRI cannot be the same as the data graph IRI. "
+            if self.ontology_graph_iri == self.output_graph_iri:
+                errors += "Ontology graph IRI cannot be the same as the output graph IRI. "
+            if errors:
+                raise ValueError(errors[:-1])
+
         with TemporaryDirectory() as self.temp:
             self._execute(inputs, context)

@@ -203,7 +203,7 @@ class ValidatePlugin(WorkflowPlugin):
                 values=values,
             ),
         ]
-        return Entities(entities=iter(entities), schema=self.schema)
+        return Entities(entities=entities, schema=self.schema)
 
     def _execute(self, context: ExecutionContext) -> Entities:
         """Run the workflow operator."""

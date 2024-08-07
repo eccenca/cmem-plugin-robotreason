@@ -285,34 +285,26 @@ class ReasonPlugin(WorkflowPlugin):
             self.log.info(f"Fetching graph {graph}.")
             with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
-                file.write(get(graph).text)
+                for line in get(graph).text.splitlines():
+                    if line != (
+                        f"<{graph}> <http://www.w3.org/2002/07/owl#imports> "
+                        f"<{self.output_graph_iri}> ."
+                    ):
+                        file.write(line + "\n")
                 if graph == self.data_graph_iri:
                     file.write(
-                        f"\n<{graph}> "
-                        f"<http://www.w3.org/2002/07/owl#imports> <{self.ontology_graph_iri}> ."
+                        f"<{graph}> <http://www.w3.org/2002/07/owl#imports> "
+                        f"<{self.ontology_graph_iri}> ."
                     )
 
     def reason(self, graphs: dict) -> None:
         """Reason"""
-        # remove_query = f"""
-        # SELECT ?s ?p ?o
-        # WHERE {{
-        #   ?s <http://www.w3.org/2002/07/owl#imports> <{self.output_graph_iri}> .
-        # }}
-        # """
-        # filtered_file = Path(self.temp) / "filtered_triples.owl"
-        # query_file = Path(self.temp) / "remove.rq"
-        # with query_file.open("w") as rqfile:
-        #     rqfile.write(remove_query)
-
         axioms = " ".join(k for k, v in self.axioms.items() if v)
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
             f'merge --input "{data_location}" '
             "--collapse-import-closure false "
-            # f'--query query.sparql {filtered_file} '
-            # f'remove --input "{data_location}" --input {filtered_file} --select "triples" '
             f"reason --reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
             f"--include-indirect true "

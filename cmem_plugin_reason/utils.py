@@ -60,7 +60,14 @@ VALIDATE_PROFILES_PARAMETER = PluginParameter(
 )
 
 OUTPUT_GRAPH_IRI_PARAMETER = PluginParameter(
-    param_type=GraphParameterType(allow_only_autocompleted_values=False),
+    param_type=GraphParameterType(
+        allow_only_autocompleted_values=False,
+        classes=[
+            "https://vocab.eccenca.com/di/Dataset",
+            "http://rdfs.org/ns/void#Dataset",
+            "http://www.w3.org/2002/07/owl#Ontology",
+        ],
+    ),
     name="output_graph_iri",
     label="Output graph IRI",
     description="""The IRI of the output graph for the inconsistency validation. ⚠️ Existing graphs

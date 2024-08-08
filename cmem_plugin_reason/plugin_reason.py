@@ -375,6 +375,12 @@ class ReasonPlugin(WorkflowPlugin):
 
     def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """Validate input, execute plugin with temporary directory"""
+        context.report.update(
+            ExecutionReport(
+                operation="reason",
+                operation_desc="ontologies and data graphs processed.",
+            )
+        )
         if self.input_profiles:
             errors = ""
             values = next(inputs[0].entities).values

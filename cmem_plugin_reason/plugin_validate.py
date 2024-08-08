@@ -131,6 +131,16 @@ class ValidatePlugin(WorkflowPlugin):
         self.schema = self.generate_output_schema()
         self.output_port = FixedSchemaPort(self.schema)
 
+    def generate_output_schema(self) -> EntitySchema:
+        """Generate the output schema."""
+        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
+        if self.validate_profile:
+            paths.append(EntityPath(path="profile"))
+        return EntitySchema(
+            type_uri="https://eccenca.com/plugin_validateontology/type",
+            paths=paths,
+        )
+
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
         for graph in graphs:
@@ -189,16 +199,6 @@ class ValidatePlugin(WorkflowPlugin):
             post_profiles(self, valid_profiles)
         return valid_profiles
 
-    def generate_output_schema(self) -> EntitySchema:
-        """Generate the output schema."""
-        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
-        if self.validate_profile:
-            paths.append(EntityPath(path="profile"))
-        return EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/type",
-            paths=paths,
-        )
-
     def make_entities(self, text: str, valid_profiles: list) -> Entities:
         """Make entities"""
         values = [[text], [self.ontology_graph_iri]]
@@ -240,11 +240,13 @@ class ValidatePlugin(WorkflowPlugin):
                 context.report.update(
                     ExecutionReport(
                         operation="validate",
-                        error="Inconsistencies found in ontology",
+                        error="Inconsistencies found in ontology.",
+                        operation_desc="ontologies processed.",
+                        entity_count=1,
                     )
                 )
             else:
-                self.log.warning("Inconsistencies found in ontology")
+                self.log.warning("Inconsistencies found in ontology.")
         else:
             context.report.update(
                 ExecutionReport(
@@ -258,5 +260,11 @@ class ValidatePlugin(WorkflowPlugin):
 
     def execute(self, inputs: tuple, context: ExecutionContext) -> Entities:  # noqa: ARG002
         """Remove temp files on error"""
+        context.report.update(
+            ExecutionReport(
+                operation="validate",
+                operation_desc="ontologies validated.",
+            )
+        )
         with TemporaryDirectory() as self.temp:
             return self._execute(context)

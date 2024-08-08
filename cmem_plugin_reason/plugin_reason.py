@@ -10,13 +10,14 @@ from warnings import simplefilter
 
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
-from cmem_plugin_base.dataintegration.context import ExecutionContext
+from cmem_plugin_base.dataintegration.context import ExecutionContext, ExecutionReport
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.entity import Entities, EntityPath, EntitySchema
+from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.parameter.graph import GraphParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.ports import FixedNumberOfInputs, FixedSchemaPort
-from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
+from cmem_plugin_base.dataintegration.types import BoolParameterType
 from cmem_plugin_base.dataintegration.utils import setup_cmempy_user_access
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -24,9 +25,9 @@ from cmem_plugin_reason.utils import (
     MAX_RAM_PERCENTAGE_DEFAULT,
     MAX_RAM_PERCENTAGE_PARAMETER,
     ONTOLOGY_GRAPH_IRI_PARAMETER,
-    REASONER_PARAMETER,
     REASONERS,
     VALIDATE_PROFILES_PARAMETER,
+    GraphParameterTypeNew,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
@@ -49,10 +50,16 @@ simplefilter("ignore", category=InsecureRequestWarning)
     the reasoning result is written to a specified graph. The following reasoners are supported:
     ELK, Expression Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     parameters=[
-        REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
         VALIDATE_PROFILES_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
+        PluginParameter(
+            param_type=ChoiceParameterType(REASONERS),
+            name="reasoner",
+            label="Reasoner",
+            description="Reasoner option. Additionally, enable axiom generators below.",
+            default_value="",
+        ),
         PluginParameter(
             param_type=GraphParameterType(
                 classes=[
@@ -66,7 +73,7 @@ simplefilter("ignore", category=InsecureRequestWarning)
             description="The IRI of the input data graph.",
         ),
         PluginParameter(
-            param_type=StringParameterType(),
+            param_type=GraphParameterTypeNew(),
             name="output_graph_iri",
             label="Result graph IRI",
             description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
@@ -118,7 +125,7 @@ simplefilter("ignore", category=InsecureRequestWarning)
             param_type=BoolParameterType(),
             name="class_assertion",
             label="ClassAssertion",
-            description="Generated Axioms",
+            description="",
             default_value=False,
         ),
         PluginParameter(
@@ -266,7 +273,7 @@ class ReasonPlugin(WorkflowPlugin):
         self.input_profiles = input_profiles
         self.max_ram_percentage = max_ram_percentage
 
-        if input_profiles:
+        if validate_profile and input_profiles:
             self.input_ports = FixedNumberOfInputs([FixedSchemaPort(self.generate_input_schema())])
         else:
             self.input_ports = FixedNumberOfInputs([])
@@ -357,6 +364,14 @@ class ReasonPlugin(WorkflowPlugin):
         if self.validate_profile:
             self.post_valid_profiles(inputs, graphs)
         post_provenance(self, get_provenance(self, context))
+
+        context.report.update(
+            ExecutionReport(
+                operation="reason",
+                operation_desc="ontology and data graph processed.",
+                entity_count=1,
+            )
+        )
 
     def execute(self, inputs: Sequence[Entities], context: ExecutionContext) -> None:
         """Validate input, execute plugin with temporary directory"""

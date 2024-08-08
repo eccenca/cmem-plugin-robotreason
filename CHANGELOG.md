@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - removed write_md and produce_graph bool parameters
 - if "input_profiles" is enabled the Reason plugin expects "ontology_iri" and "profile" on the input.
 The ontology IRI on the input overrides the plugin setting.
+- update execution report
+- Output graph IRI selectable from existing graphs
 
 ## [1.0.0beta4] 2024-07-12
 

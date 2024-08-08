@@ -10,9 +10,10 @@ from warnings import simplefilter
 import validators.url
 from cmem.cmempy.dp.proxy.graph import get
 from cmem.cmempy.workspace.projects.resources.resource import create_resource
-from cmem_plugin_base.dataintegration.context import ExecutionContext
+from cmem_plugin_base.dataintegration.context import ExecutionContext, ExecutionReport
 from cmem_plugin_base.dataintegration.description import Icon, Plugin, PluginParameter
 from cmem_plugin_base.dataintegration.entity import Entities, Entity, EntityPath, EntitySchema
+from cmem_plugin_base.dataintegration.parameter.choice import ChoiceParameterType
 from cmem_plugin_base.dataintegration.plugins import WorkflowPlugin
 from cmem_plugin_base.dataintegration.ports import FixedNumberOfInputs, FixedSchemaPort
 from cmem_plugin_base.dataintegration.types import BoolParameterType, StringParameterType
@@ -24,9 +25,9 @@ from cmem_plugin_reason.utils import (
     MAX_RAM_PERCENTAGE_DEFAULT,
     MAX_RAM_PERCENTAGE_PARAMETER,
     ONTOLOGY_GRAPH_IRI_PARAMETER,
-    REASONER_PARAMETER,
     REASONERS,
     VALIDATE_PROFILES_PARAMETER,
+    GraphParameterTypeNew,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
@@ -51,12 +52,18 @@ simplefilter("ignore", category=InsecureRequestWarning)
     Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     icon=Icon(file_name="file-icons--owl.svg", package=__package__),
     parameters=[
-        REASONER_PARAMETER,
         ONTOLOGY_GRAPH_IRI_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
         VALIDATE_PROFILES_PARAMETER,
         PluginParameter(
-            param_type=StringParameterType(),
+            param_type=ChoiceParameterType(REASONERS),
+            name="reasoner",
+            label="Reasoner",
+            description="Reasoner option.",
+            default_value="",
+        ),
+        PluginParameter(
+            param_type=GraphParameterTypeNew(),
             name="output_graph_iri",
             label="Output graph IRI",
             description="The IRI of the output graph for the inconsistency validation. ⚠️ Existing "
@@ -228,9 +235,24 @@ class ValidatePlugin(WorkflowPlugin):
             self.make_resource(context)
 
         text = (Path(self.temp) / self.md_filename).read_text()
-
-        if self.stop_at_inconsistencies and text.split("\n", 1)[0] != "No explanations found.":
-            raise RuntimeError("Inconsistencies found in Ontology.")
+        if text.split("\n", 1)[0] != "No explanations found.":
+            if self.stop_at_inconsistencies:
+                context.report.update(
+                    ExecutionReport(
+                        operation="validate",
+                        error="Inconsistencies found in ontology",
+                    )
+                )
+            else:
+                self.log.warning("Inconsistencies found in ontology")
+        else:
+            context.report.update(
+                ExecutionReport(
+                    operation="validate",
+                    operation_desc="ontology validated.",
+                    entity_count=1,
+                )
+            )
 
         return self.make_entities(text, valid_profiles)
 

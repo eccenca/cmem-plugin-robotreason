@@ -137,7 +137,7 @@ class ValidatePlugin(WorkflowPlugin):
         if self.validate_profile:
             paths.append(EntityPath(path="profile"))
         return EntitySchema(
-            type_uri="https://eccenca.com/plugin_validateontology/type",
+            type_uri="validate",
             paths=paths,
         )
 

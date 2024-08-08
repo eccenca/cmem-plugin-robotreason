@@ -44,7 +44,7 @@ MAX_RAM_PERCENTAGE_DEFAULT = 20
 ONTOLOGY_GRAPH_IRI_PARAMETER = PluginParameter(
     param_type=GraphParameterType(classes=["http://www.w3.org/2002/07/owl#Ontology"]),
     name="ontology_graph_iri",
-    label="Ontology_graph_IRI",
+    label="Ontology graph IRI",
     description="The IRI of the input ontology graph.",
 )
 

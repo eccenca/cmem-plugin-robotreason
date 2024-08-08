@@ -57,7 +57,7 @@ simplefilter("ignore", category=InsecureRequestWarning)
             param_type=ChoiceParameterType(REASONERS),
             name="reasoner",
             label="Reasoner",
-            description="Reasoner option. Additionally, enable axiom generators below.",
+            description="Reasoner option. Additionally, select axiom generators below.",
             default_value="",
         ),
         PluginParameter(
@@ -282,7 +282,7 @@ class ReasonPlugin(WorkflowPlugin):
     def generate_input_schema(self) -> EntitySchema:
         """Generate the output schema."""
         return EntitySchema(
-            type_uri="urn:row",
+            type_uri="reason",
             paths=[EntityPath(path="profile"), EntityPath(path="ontology")],
         )
 

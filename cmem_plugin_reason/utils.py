@@ -149,14 +149,14 @@ def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | 
     project_graph = f"http://di.eccenca.com/project/{context.task.project_id()}"
 
     type_query = f"""
-            SELECT ?type ?label {{
-                GRAPH <{project_graph}> {{
-                    <{plugin_iri}> a ?type .
-                    <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
-                    FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
-                }}
+        SELECT ?type ?label {{
+            GRAPH <{project_graph}> {{
+                <{plugin_iri}> a ?type .
+                <{plugin_iri}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+                FILTER(STRSTARTS(STR(?type), "https://vocab.eccenca.com/di/functions/"))
             }}
-        """
+        }}
+    """
 
     result = json.loads(post_select(query=type_query))
 

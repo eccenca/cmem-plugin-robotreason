@@ -25,9 +25,9 @@ from cmem_plugin_reason.utils import (
     MAX_RAM_PERCENTAGE_DEFAULT,
     MAX_RAM_PERCENTAGE_PARAMETER,
     ONTOLOGY_GRAPH_IRI_PARAMETER,
+    OUTPUT_GRAPH_IRI_PARAMETER,
     REASONERS,
     VALIDATE_PROFILES_PARAMETER,
-    GraphParameterTypeNew,
     create_xml_catalog_file,
     get_graphs_tree,
     get_provenance,
@@ -51,6 +51,7 @@ simplefilter("ignore", category=InsecureRequestWarning)
     ELK, Expression Materializing Reasoner, HermiT, JFact, Structural Reasoner and Whelk.""",
     parameters=[
         ONTOLOGY_GRAPH_IRI_PARAMETER,
+        OUTPUT_GRAPH_IRI_PARAMETER,
         VALIDATE_PROFILES_PARAMETER,
         MAX_RAM_PERCENTAGE_PARAMETER,
         PluginParameter(
@@ -71,13 +72,6 @@ simplefilter("ignore", category=InsecureRequestWarning)
             name="data_graph_iri",
             label="Data graph IRI",
             description="The IRI of the input data graph.",
-        ),
-        PluginParameter(
-            param_type=GraphParameterTypeNew(),
-            name="output_graph_iri",
-            label="Result graph IRI",
-            description="The IRI of the output graph for the reasoning result. ⚠️ Existing graphs "
-            "will be overwritten.",
         ),
         PluginParameter(
             param_type=BoolParameterType(),

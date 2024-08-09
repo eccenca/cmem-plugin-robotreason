@@ -127,21 +127,18 @@ class ValidatePlugin(WorkflowPlugin):
 
     def generate_output_schema(self) -> EntitySchema:
         """Generate the output schema."""
-        paths = [EntityPath(path="markdown"), EntityPath(path="ontology")]
+        paths = [EntityPath("markdown"), EntityPath("ontology")]
         if self.validate_profile:
-            paths.append(EntityPath(path="profile"))
-        return EntitySchema(
-            type_uri="validate",
-            paths=paths,
-        )
+            paths.append(EntityPath("profile"))
+        return EntitySchema(type_uri="validate", paths=paths)
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
-        for graph in graphs:
-            self.log.info(f"Fetching graph {graph}.")
-            with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
+        for iri, filename in graphs.items():
+            self.log.info(f"Fetching graph {iri}.")
+            with (Path(self.temp) / filename).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
-                file.write(get(graph).text)
+                file.write(get(iri).text)
 
     def explain(self, graphs: dict) -> None:
         """Reason"""

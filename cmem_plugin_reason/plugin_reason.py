@@ -276,25 +276,25 @@ class ReasonPlugin(WorkflowPlugin):
     def generate_input_schema(self) -> EntitySchema:
         """Generate the output schema."""
         return EntitySchema(
-            type_uri="reason",
-            paths=[EntityPath(path="profile"), EntityPath(path="ontology")],
+            type_uri="validate",
+            paths=[EntityPath("profile"), EntityPath("ontology")],
         )
 
     def get_graphs(self, graphs: dict, context: ExecutionContext) -> None:
         """Get graphs from CMEM"""
-        for graph in graphs:
-            self.log.info(f"Fetching graph {graph}.")
-            with (Path(self.temp) / graphs[graph]).open("w", encoding="utf-8") as file:
+        for iri, filename in graphs.items():
+            self.log.info(f"Fetching graph {iri}.")
+            with (Path(self.temp) / filename).open("w", encoding="utf-8") as file:
                 setup_cmempy_user_access(context.user)
-                for line in get(graph).text.splitlines():
+                for line in get(iri).text.splitlines():
                     if line != (
-                        f"<{graph}> <http://www.w3.org/2002/07/owl#imports> "
+                        f"<{iri}> <http://www.w3.org/2002/07/owl#imports> "
                         f"<{self.output_graph_iri}> ."
                     ):
                         file.write(line + "\n")
-                if graph == self.data_graph_iri:
+                if iri == self.data_graph_iri:
                     file.write(
-                        f"<{graph}> <http://www.w3.org/2002/07/owl#imports> "
+                        f"<{iri}> <http://www.w3.org/2002/07/owl#imports> "
                         f"<{self.ontology_graph_iri}> ."
                     )
 
@@ -304,9 +304,8 @@ class ReasonPlugin(WorkflowPlugin):
         data_location = f"{self.temp}/{graphs[self.data_graph_iri]}"
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
         cmd = (
-            f'merge --input "{data_location}" '
-            "--collapse-import-closure false "
-            f"reason --reasoner {self.reasoner} "
+            f'reason --input "{data_location}" '
+            f"--reasoner {self.reasoner} "
             f'--axiom-generators "{axioms}" '
             f"--include-indirect true "
             f"--exclude-duplicate-axioms true "

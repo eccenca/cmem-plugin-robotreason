@@ -120,25 +120,24 @@ def send_result(iri: str, filepath: Path) -> None:
 
 def post_provenance(plugin: WorkflowPlugin, prov: dict | None) -> None:
     """Post provenance"""
-    if not prov:
-        return
-    param_sparql = ""
-    for name, iri in prov["parameters"].items():
-        param_sparql += f'\n<{prov["plugin_iri"]}> <{iri}> "{plugin.__dict__[name]}" .'
-    insert_query = f"""
-        INSERT DATA {{
-            GRAPH <{plugin.output_graph_iri}> {{
-                <{plugin.output_graph_iri}> <http://purl.org/dc/terms/creator>
-                    <{prov["plugin_iri"]}> .
-                <{prov["plugin_iri"]}> a <{prov["plugin_type"]}>,
-                    <https://vocab.eccenca.com/di/CustomTask> .
-                <{prov["plugin_iri"]}> <http://www.w3.org/2000/01/rdf-schema#label>
-                    "{prov['plugin_label']}" .
-                {param_sparql}
+    if prov:
+        param_sparql = ""
+        for name, iri in prov["parameters"].items():
+            param_sparql += f'\n<{prov["plugin_iri"]}> <{iri}> "{plugin.__dict__[name]}" .'
+        insert_query = f"""
+            INSERT DATA {{
+                GRAPH <{plugin.output_graph_iri}> {{
+                    <{plugin.output_graph_iri}> <http://purl.org/dc/terms/creator>
+                        <{prov["plugin_iri"]}> .
+                    <{prov["plugin_iri"]}> a <{prov["plugin_type"]}>,
+                        <https://vocab.eccenca.com/di/CustomTask> .
+                    <{prov["plugin_iri"]}> <http://www.w3.org/2000/01/rdf-schema#label>
+                        "{prov['plugin_label']}" .
+                    {param_sparql}
+                }}
             }}
-        }}
-    """
-    post_update(query=insert_query)
+        """
+        post_update(query=insert_query)
 
 
 def get_provenance(plugin: WorkflowPlugin, context: ExecutionContext) -> dict | None:

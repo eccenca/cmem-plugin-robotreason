@@ -146,8 +146,8 @@ class ValidatePlugin(WorkflowPlugin):
         utctime = str(datetime.fromtimestamp(int(time()), tz=UTC))[:-6].replace(" ", "T") + "Z"
 
         cmd = (
-            f'merge --input "{data_location}" '
-            f"explain --reasoner {self.reasoner} -M inconsistency "
+            f'explain --input "{data_location}" '
+            f"--reasoner {self.reasoner} -M inconsistency "
             f'--explanation "{self.temp}/{self.md_filename}"'
         )
 

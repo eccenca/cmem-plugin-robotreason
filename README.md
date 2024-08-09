@@ -90,8 +90,9 @@ Validate the input ontology against OWL profiles (DL, EL, QL, RL, and Full). The
 
 If enabled along with the "Validate OWL2 profiles" parameter, the list of valid profiles is taken from the plugin input, 
 without validating the ontology against the profiles in the plugin. The inputs need to include the entity paths "profile"
-for the valid profiles, and "ontology" for the ontology IRI. If the "Validate OWL2 profiles" parameter is enabled in the
-"Validate" plugin, it can be directly connected to the input of the "Reason" plugin.
+for the valid profiles, and "ontology" for the ontology IRI, the latter overriding the setting in the "Reason" plugin.
+If the "Validate OWL2 profiles" parameter is enabled in the "Validate" plugin, it can be directly connected to the input
+of the "Reason" plugin.
 
 
 ### Maximum RAM Percentage
@@ -102,7 +103,8 @@ Maximum heap size for the Java virtual machine in the DI container running the r
 
 # Validate
 
-The plugin outputs the explanation as text in Markdown format using the path "markdown".
+The plugin outputs the explanation as text in Markdown format on the path "markdown",
+the ontology IRI on the path "ontology", and (if enabled) the valid OWL2 profiles in the path "profile".
 
 ## Options
 

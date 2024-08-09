@@ -6,9 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [Unreleased]
 
+### Added
+
+ - defined input and output schema
+
+### Fixed
+
+ - incorrect stopping of workflow if "validate_profiles" and "stop_at_inconsistencies" is enabled in Validate plugin
+ - fixed error when output graph is imported by input graph; the import is removed in-memory before reasoning
+
 ### Changed
 
 - raise OSError on post result graph error
+- removed write_md and produce_graph bool parameters
+- if "input_profiles" is enabled the Reason plugin expects "ontology_iri" and "profile" on the input.
+The ontology IRI on the input overrides the plugin setting.
+- update execution report
+- Output graph IRI selectable from existing graphs
 
 ## [1.0.0beta4] 2024-07-12
 
